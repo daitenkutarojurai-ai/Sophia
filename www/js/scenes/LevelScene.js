@@ -1,0 +1,313 @@
+import { WIDTH, HEIGHT, LEVELS } from '../constants.js';
+import Sophia from '../entities/Sophia.js';
+import Jesus from '../entities/Jesus.js';
+import ArchonScout from '../entities/ArchonScout.js';
+
+export default class LevelScene extends Phaser.Scene {
+  constructor() { super({ key: 'Level' }); }
+
+  init(data) {
+    this.levelIndex = data.levelIndex ?? 0;
+    this.characterId = data.character ?? 'sophia';
+    this.level = LEVELS[this.levelIndex];
+    this.levelTimer = 0;
+    this.finished = false;
+  }
+
+  create() {
+    const { worldWidth, bgTint, bgKey, decor } = this.level;
+
+    // Physics + camera bounds
+    this.physics.world.setBounds(0, 0, worldWidth, HEIGHT);
+    this.cameras.main.setBounds(0, 0, worldWidth, HEIGHT);
+
+    // Layered backdrop
+    this.add.rectangle(0, 0, worldWidth, HEIGHT, bgTint)
+      .setOrigin(0).setScrollFactor(0.05);
+    this.bgFar = this.add.tileSprite(0, 0, WIDTH, HEIGHT, bgKey)
+      .setOrigin(0).setScrollFactor(0).setAlpha(0.85);
+    this.bgNear = this.add.tileSprite(0, 0, WIDTH, HEIGHT, 'bg_nebula')
+      .setOrigin(0).setScrollFactor(0).setAlpha(0.55);
+
+    this._buildDecor(decor, worldWidth);
+    this._buildPlatforms();
+    this._buildPlayer();
+    this._buildSparks();
+    this._buildEnemies();
+    this._buildProjectiles();
+    this._buildExit();
+    this._buildAtmosphereFX();
+    this._buildInput();
+    this._buildCollisions();
+    this._setupEvents();
+
+    this.scene.launch('UI', {
+      level: this.level,
+      characterId: this.characterId,
+    });
+
+    this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
+    this.cameras.main.fadeIn(500, 0, 0, 0);
+  }
+
+  update(time, delta) {
+    if (this.finished) return;
+    this.levelTimer += delta;
+    this.player.update(time, delta);
+    this.enemies.getChildren().forEach(e => e.update?.(time, delta));
+    this._updateProjectiles(delta);
+
+    // Parallax
+    const sx = this.cameras.main.scrollX;
+    this.bgFar.tilePositionX  = sx * 0.25;
+    this.bgNear.tilePositionX = sx * 0.5;
+  }
+
+  // ── Build ────────────────────────────────────────────────────────────────────
+
+  _buildDecor(kind, worldWidth) {
+    // Distant set-dressing that scrolls with parallax
+    this.decorLayer = this.add.group();
+    const count = Math.ceil(worldWidth / 400) + 1;
+    for (let i = 0; i < count; i++) {
+      const x = i * 400 + Phaser.Math.Between(-40, 40);
+      if (kind === 'gates') {
+        const g = this.add.image(x, 150, 'aeon_gate').setScale(0.55)
+          .setAlpha(0.35).setScrollFactor(0.35);
+        this.decorLayer.add(g);
+      } else if (kind === 'shadows') {
+        const a = this.add.image(x, 180, 'archon_shadow').setScale(0.7)
+          .setAlpha(0.45).setScrollFactor(0.4);
+        this.decorLayer.add(a);
+        // Sinister eyes glow
+        this.tweens.add({
+          targets: a, alpha: 0.25,
+          yoyo: true, repeat: -1, duration: 1500 + Math.random() * 800,
+        });
+      } else if (kind === 'ascending') {
+        const g = this.add.image(x, 150, 'aeon_gate').setScale(0.65)
+          .setAlpha(0.45).setScrollFactor(0.3).setTint(0xffe0a0);
+        this.decorLayer.add(g);
+      }
+    }
+  }
+
+  _buildPlatforms() {
+    this.platforms = this.physics.add.staticGroup();
+    for (const [x, y, w] of this.level.platforms) {
+      this.add.tileSprite(x, y, w, 12, 'platform').setOrigin(0);
+      const body = this.add.rectangle(x, y, w, 12, 0x000000, 0).setOrigin(0);
+      this.physics.add.existing(body, true);
+      this.platforms.add(body);
+    }
+  }
+
+  _buildPlayer() {
+    const startX = 40, startY = HEIGHT - 60;
+    const Cls = this.characterId === 'jesus' ? Jesus : Sophia;
+    this.player = new Cls(this, startX, startY);
+  }
+
+  _buildSparks() {
+    this.sparks = this.physics.add.group({
+      allowGravity: false, immovable: true,
+    });
+    for (const [x, y] of this.level.sparks) {
+      const s = this.sparks.create(x, y, 'orb');
+      s.body.setSize(14, 14);
+      this.tweens.add({
+        targets: s, y: y - 5,
+        yoyo: true, repeat: -1,
+        duration: 800 + Math.random() * 400,
+        ease: 'Sine.easeInOut',
+      });
+      // Light trail particles
+      this.add.particles(x, y, 'spark', {
+        scale: { start: 0.2, end: 0 },
+        alpha: { start: 0.4, end: 0 },
+        speed: { min: 5, max: 15 },
+        lifespan: 900,
+        frequency: 350,
+        quantity: 1,
+        follow: s,
+      });
+    }
+  }
+
+  _buildEnemies() {
+    this.enemies = this.physics.add.group({ runChildUpdate: false });
+    for (const [x, y, behavior] of this.level.enemies) {
+      const e = new ArchonScout(this, x, y, behavior);
+      this.enemies.add(e);
+    }
+  }
+
+  _buildProjectiles() {
+    this.projectiles = this.physics.add.group({ allowGravity: false });
+  }
+
+  _buildExit() {
+    const [x, y] = this.level.exit;
+    this.exit = this.physics.add.staticImage(x, y, 'portal');
+    this.exit.body.setSize(32, 48).setOffset(4, 4);
+
+    // Beam glow particles
+    this.add.particles(x, y + 10, 'spark', {
+      x: { min: -10, max: 10 },
+      y: { min: -20, max: 20 },
+      scale: { start: 0.5, end: 0 },
+      alpha: { start: 0.8, end: 0 },
+      speed: { min: 10, max: 40 },
+      tint: [0xffffff, 0xffe0ff, 0xc8a0ff],
+      lifespan: 1200,
+      frequency: 80,
+      quantity: 1,
+    });
+
+    this.tweens.add({
+      targets: this.exit,
+      alpha: 0.7, yoyo: true, repeat: -1,
+      duration: 700, ease: 'Sine.easeInOut',
+    });
+  }
+
+  _buildAtmosphereFX() {
+    // Per-act particle mood
+    if (this.level.decor === 'gates') {
+      // Descending divine sparks
+      this.add.particles(0, 0, 'spark', {
+        x: { min: 0, max: WIDTH },
+        y: -10,
+        speedY: { min: 20, max: 60 },
+        scale: { start: 0.3, end: 0 },
+        alpha: { start: 0.35, end: 0 },
+        lifespan: 5000, frequency: 250, quantity: 1,
+        scrollFactor: 0, tint: [0xc8a0ff, 0xffffff],
+      });
+    } else if (this.level.decor === 'shadows') {
+      // Rising fog motes
+      this.add.particles(0, HEIGHT, 'spark', {
+        x: { min: 0, max: WIDTH }, y: 0,
+        speedY: { min: -20, max: -10 },
+        scale: { start: 0.3, end: 0 },
+        alpha: { start: 0.2, end: 0 },
+        tint: 0x6a1030,
+        lifespan: 6000, frequency: 400, quantity: 1,
+        scrollFactor: 0,
+      });
+    } else if (this.level.decor === 'ascending') {
+      // Golden rising motes
+      this.add.particles(0, HEIGHT, 'spark', {
+        x: { min: 0, max: WIDTH }, y: 0,
+        speedY: { min: -40, max: -15 },
+        scale: { start: 0.35, end: 0 },
+        alpha: { start: 0.5, end: 0 },
+        tint: [0xffe080, 0xffffff, 0xffc060],
+        lifespan: 4000, frequency: 180, quantity: 1,
+        scrollFactor: 0,
+      });
+    }
+  }
+
+  _buildInput() {
+    this.cursors = this.input.keyboard.createCursorKeys();
+    this.actionKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
+  }
+
+  _buildCollisions() {
+    this.physics.add.collider(this.player, this.platforms);
+    this.physics.add.collider(this.enemies, this.platforms);
+    this.physics.add.collider(this.projectiles, this.platforms,
+      (proj) => proj.destroy());
+
+    this.physics.add.overlap(this.player, this.sparks, (_p, spark) => {
+      this._emitCollectFX(spark.x, spark.y);
+      spark.destroy();
+      this.player.collectSpark();
+    });
+
+    this.physics.add.overlap(this.player, this.enemies, (_p, enemy) => {
+      if (!enemy.isDead) this.player.takeDamage(enemy.touchDamage ?? 1);
+    });
+
+    this.physics.add.overlap(this.projectiles, this.enemies, (proj, enemy) => {
+      if (enemy.isDead) return;
+      enemy.takeDamage(proj.damage ?? 1);
+      proj.destroy();
+    });
+
+    this.physics.add.overlap(this.player, this.exit, () => this._winLevel());
+  }
+
+  _setupEvents() {
+    this.events.once('player_died', () => this._loseLevel());
+    this.events.on('enemy_killed', ({ x, y }) => {
+      const s = this.sparks.create(x, y - 8, 'orb');
+      s.body.setSize(14, 14);
+      this.tweens.add({
+        targets: s, y: y - 14, yoyo: true, repeat: -1, duration: 900,
+      });
+    });
+  }
+
+  _emitCollectFX(x, y) {
+    const burst = this.add.particles(x, y, 'spark', {
+      scale: { start: 0.8, end: 0 },
+      speed: { min: 50, max: 120 },
+      alpha: { start: 1, end: 0 },
+      lifespan: 400,
+      quantity: 6,
+      emitting: false,
+      tint: [0xffffff, 0xffe0ff, 0xc8a0ff],
+    });
+    burst.explode(6);
+    this.time.delayedCall(500, () => burst.destroy());
+  }
+
+  _updateProjectiles(delta) {
+    for (const p of this.projectiles.getChildren()) {
+      p.lifespan -= delta;
+      if (p.lifespan <= 0) p.destroy();
+    }
+  }
+
+  // ── Win / lose ──────────────────────────────────────────────────────────────
+
+  _winLevel() {
+    if (this.finished) return;
+    this.finished = true;
+    this.player.setVelocity(0, 0);
+    this.cameras.main.flash(500, 220, 180, 255);
+
+    const next = this.levelIndex + 1;
+    const progress = this.registry.get('progress') ?? {};
+    progress.totalSparks = (progress.totalSparks ?? 0) + this.player.sparks;
+    progress.currentLevel = next;
+    this.registry.set('progress', progress);
+
+    this.cameras.main.fadeOut(800, 240, 220, 255);
+    this.time.delayedCall(850, () => {
+      this.scene.stop('UI');
+      if (next < LEVELS.length) {
+        this.scene.start('Level',
+          { levelIndex: next, character: this.characterId });
+      } else {
+        this.scene.start('Victory',
+          { totalSparks: progress.totalSparks, character: this.characterId });
+      }
+    });
+  }
+
+  _loseLevel() {
+    if (this.finished) return;
+    this.finished = true;
+    this.cameras.main.fadeOut(700, 100, 0, 0);
+    this.time.delayedCall(750, () => {
+      this.scene.stop('UI');
+      this.scene.start('GameOver', {
+        levelIndex: this.levelIndex,
+        character: this.characterId,
+      });
+    });
+  }
+}
