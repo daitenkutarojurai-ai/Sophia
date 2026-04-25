@@ -1,6 +1,6 @@
 // ─── GAME CONSTANTS ───────────────────────────────────────────────────────────
 
-export const GAME_VERSION = '0.3.0';
+export const GAME_VERSION = '0.4.0';
 
 // Canvas base resolution (scaled up by Phaser)
 export const WIDTH  = 480;
@@ -21,7 +21,7 @@ export const CHARACTERS = {
     attack: 'melee',
     attackRange: 36,
     attackDamage: 1,
-    color: '#ffe080',
+    color: '#f0e8ff',
   },
   jesus: {
     name: 'Jesus',
@@ -35,7 +35,7 @@ export const CHARACTERS = {
     attack: 'ranged',
     attackRange: 0,
     attackDamage: 1,
-    color: '#ffe080',
+    color: '#ffcc80',
   },
 };
 

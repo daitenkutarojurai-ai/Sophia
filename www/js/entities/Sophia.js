@@ -100,6 +100,7 @@ export default class Sophia extends Phaser.Physics.Arcade.Sprite {
     const dir = this.flipX ? 1 : -1;
     this.setVelocity(dir * 180, -220);
 
+    this.scene.cameras.main.shake(110, 0.008);
     this.scene.events.emit('hp_updated', this.hp);
     this.scene.time.delayedCall(500, () => {
       this.isHurt = false;
@@ -134,13 +135,35 @@ export default class Sophia extends Phaser.Physics.Arcade.Sprite {
 
     // Apply damage to enemies in range
     const enemies = this.scene.enemies?.getChildren() ?? [];
+    let hitAny = false;
     for (const e of enemies) {
       if (e.active && Phaser.Math.Distance.Between(hitX, hitY, e.x, e.y) < DATA.attackRange) {
         e.takeDamage?.(DATA.attackDamage);
+        this._emitHitFX(e.x, e.y);
+        hitAny = true;
       }
+    }
+    if (hitAny) {
+      this.scene.cameras.main.shake(55, 0.005);
+      this.scene.events.emit('combo_hit');
     }
 
     this.scene.time.delayedCall(200, () => { this.isAttacking = false; });
+  }
+
+  _emitHitFX(x, y) {
+    const burst = this.scene.add.particles(x, y, 'spark', {
+      scale: { start: 0.7, end: 0 },
+      speed: { min: 60, max: 140 },
+      alpha: { start: 1, end: 0 },
+      lifespan: 280,
+      quantity: 5,
+      emitting: false,
+      tint: [0xffffff, 0xffe080, 0xff8040],
+      blendMode: 'ADD',
+    });
+    burst.explode(5);
+    this.scene.time.delayedCall(350, () => burst.destroy());
   }
 
   static _defineAnims(scene) {

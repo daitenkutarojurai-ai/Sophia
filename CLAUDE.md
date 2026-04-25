@@ -213,6 +213,21 @@ sophia-game/
 
 ## 8. TO DO
 
+### ✅ Done (v0.4.0 — Polish Pass)
+- [x] **Difficulty scaling per act** — ArchonScout speed × 1.22 per level, HP scales 2→3→4
+- [x] **Enemy HP bar** — small red bar above each Archon Scout, depletes on hit
+- [x] **Chase visual indicator** — enemies tint orange-red when entering chase mode
+- [x] **Screen shake** — camera shakes on player hit (110ms), enemy kill (65ms), ranged hit (40ms)
+- [x] **Hit burst FX** — Sophia melee contact spawns 5-particle ADD-blend burst at enemy position
+- [x] **Projectile trail particles** — Jesus seal projectiles leave a blue/white light trail
+- [x] **Combo counter** — HUD shows `N× HIT!` with pop scale animation, resets after 1.5s
+- [x] **Pause system** — ESC pauses physics + tweens; UIScene overlay shows PAUSED text; ESC resumes
+- [x] **Act-specific spark colors** — Act I: purple/white, Act II: red/crimson, Act III: gold/white
+- [x] **Portal spinning rune ring** — 6 orbiting dots drawn every 33ms around exit portal
+- [x] **Portal enhanced particles** — denser, brighter, ADD-blend, 2 per 55ms
+- [x] **Character color differentiation** — Sophia: `#f0e8ff` (platinum), Jesus: `#ffcc80` (amber)
+- [x] **Death burst FX** — enemy death spawns 6-particle burst (red→orange→white)
+
 ### 🔴 High Priority (next session)
 - [ ] **Act2Scene** — The Chaos
   - Dark, claustrophobic Hollow Knight style
@@ -334,3 +349,6 @@ npx cap open android
 - **The Adam trick = puzzle mechanic** — Sophia's cunning, not combat power, defeats the Demiurge.
 - **Light Sparks = Sophia's scattered divine light in humanity** — the core progression mechanic is lore-accurate.
 - **Resolution 480×270** — pixel-art friendly, scales cleanly to all mobile screens.
+- **Combo counter resets after 1.5s of no hits** — generous window keeps combos feel achievable.
+- **ArchonScout difficulty: speed × (1 + levelIndex × 0.22)** — Act I patrol 55→67→78px/s across acts.
+- **Pause via physics.pause() + tweens.pauseAll()** — UIScene stays active and handles ESC-to-resume.
