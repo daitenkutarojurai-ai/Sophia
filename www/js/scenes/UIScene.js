@@ -48,18 +48,29 @@ export default class UIScene extends Phaser.Scene {
 
     // Bottom control hint (always visible)
     this.add.text(WIDTH / 2, HEIGHT - 10,
-      '← →  MOVE     ↑  JUMP     Z  ' +
-        (charData.attack === 'melee' ? 'STRIKE' : 'CAST'),
+      '← →  MOVE   ↑  JUMP   Z  ' +
+        (charData.attack === 'melee' ? 'STRIKE' : 'CAST') +
+        '   ESC  PAUSE',
       style(7, '#a080d0'))
       .setOrigin(0.5).setScrollFactor(0).setDepth(100);
 
     // Floating lore banner — non-blocking, auto-fade
     this._buildLoreBanner();
+    this._buildComboCounter();
+    this._buildPauseOverlay();
 
     // Subscribe to level events
     const levelScene = this.scene.get('Level');
     levelScene.events.on('hp_updated',     hp => this._updateHp(hp));
     levelScene.events.on('sparks_updated', n  => this._sparks.setText(String(n)));
+    levelScene.events.on('combo_hit',      () => this._onComboHit());
+    levelScene.events.on('game_paused',    p  => this._setPaused(p));
+
+    // ESC resumes game while UI scene is active (level scene may be paused)
+    this.input.keyboard.on('keydown-ESC', () => {
+      const lvl = this.scene.get('Level');
+      if (lvl?.isPaused) lvl._togglePause();
+    });
   }
 
   _buildLoreBanner() {
@@ -89,6 +100,51 @@ export default class UIScene extends Phaser.Scene {
         });
       },
     });
+  }
+
+  _buildComboCounter() {
+    this._comboCount = 0;
+    this._comboTimer = null;
+    this._comboText = this.add.text(WIDTH - 8, HEIGHT - 22, '', {
+      fontFamily: 'monospace', fontSize: '9px',
+      color: '#ffb040', stroke: '#000', strokeThickness: 2,
+    }).setOrigin(1, 0).setScrollFactor(0).setDepth(100);
+  }
+
+  _onComboHit() {
+    this._comboCount++;
+    if (this._comboTimer) this._comboTimer.remove();
+    if (this._comboCount > 1) {
+      this._comboText.setText(`${this._comboCount}× HIT!`);
+      this.tweens.killTweensOf(this._comboText);
+      this._comboText.setScale(1.4);
+      this.tweens.add({
+        targets: this._comboText, scaleX: 1, scaleY: 1, duration: 130,
+        ease: 'Sine.easeOut',
+      });
+    }
+    this._comboTimer = this.time.delayedCall(1500, () => {
+      this._comboCount = 0;
+      this._comboText.setText('');
+    });
+  }
+
+  _buildPauseOverlay() {
+    const bg = this.add.rectangle(WIDTH / 2, HEIGHT / 2, WIDTH, HEIGHT, 0x000000, 0.72)
+      .setScrollFactor(0).setDepth(200);
+    const title = this.add.text(WIDTH / 2, HEIGHT / 2 - 18, 'PAUSED', {
+      fontFamily: 'monospace', fontSize: '22px',
+      color: '#c8a0ff', stroke: '#000', strokeThickness: 4,
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(201);
+    const hint = this.add.text(WIDTH / 2, HEIGHT / 2 + 6, 'Press ESC to resume', {
+      fontFamily: 'monospace', fontSize: '7px', color: '#8060b0',
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(201);
+    this._pauseObjects = [bg, title, hint];
+    this._pauseObjects.forEach(o => o.setVisible(false));
+  }
+
+  _setPaused(paused) {
+    this._pauseObjects?.forEach(o => o.setVisible(paused));
   }
 
   _updateHp(hp) {

@@ -12,6 +12,7 @@ export default class LevelScene extends Phaser.Scene {
     this.level = LEVELS[this.levelIndex];
     this.levelTimer = 0;
     this.finished = false;
+    this.isPaused = false;
   }
 
   create() {
@@ -51,7 +52,7 @@ export default class LevelScene extends Phaser.Scene {
   }
 
   update(time, delta) {
-    if (this.finished) return;
+    if (this.finished || this.isPaused) return;
     this.levelTimer += delta;
     this.player.update(time, delta);
     this.enemies.getChildren().forEach(e => e.update?.(time, delta));
@@ -112,6 +113,7 @@ export default class LevelScene extends Phaser.Scene {
     this.sparks = this.physics.add.group({
       allowGravity: false, immovable: true,
     });
+    const tints = this._getSparkTint();
     for (const [x, y] of this.level.sparks) {
       const s = this.sparks.create(x, y, 'orb');
       s.body.setSize(14, 14);
@@ -121,23 +123,31 @@ export default class LevelScene extends Phaser.Scene {
         duration: 800 + Math.random() * 400,
         ease: 'Sine.easeInOut',
       });
-      // Light trail particles
       this.add.particles(x, y, 'spark', {
-        scale: { start: 0.2, end: 0 },
-        alpha: { start: 0.4, end: 0 },
-        speed: { min: 5, max: 15 },
+        scale: { start: 0.22, end: 0 },
+        alpha: { start: 0.5, end: 0 },
+        speed: { min: 5, max: 18 },
         lifespan: 900,
-        frequency: 350,
+        frequency: 300,
         quantity: 1,
+        tint: tints,
         follow: s,
       });
     }
   }
 
+  _getSparkTint() {
+    const { decor } = this.level;
+    if (decor === 'gates')     return [0xe8d0ff, 0xffffff, 0xc8a0ff];
+    if (decor === 'shadows')   return [0xff6080, 0xff3050, 0xcc0030];
+    if (decor === 'ascending') return [0xffe080, 0xffc040, 0xffffff];
+    return [0xffffff, 0xffe0ff, 0xc8a0ff];
+  }
+
   _buildEnemies() {
     this.enemies = this.physics.add.group({ runChildUpdate: false });
     for (const [x, y, behavior] of this.level.enemies) {
-      const e = new ArchonScout(this, x, y, behavior);
+      const e = new ArchonScout(this, x, y, behavior, this.levelIndex);
       this.enemies.add(e);
     }
   }
@@ -151,23 +161,47 @@ export default class LevelScene extends Phaser.Scene {
     this.exit = this.physics.add.staticImage(x, y, 'portal');
     this.exit.body.setSize(32, 48).setOffset(4, 4);
 
-    // Beam glow particles
-    this.add.particles(x, y + 10, 'spark', {
-      x: { min: -10, max: 10 },
-      y: { min: -20, max: 20 },
-      scale: { start: 0.5, end: 0 },
-      alpha: { start: 0.8, end: 0 },
-      speed: { min: 10, max: 40 },
-      tint: [0xffffff, 0xffe0ff, 0xc8a0ff],
-      lifespan: 1200,
-      frequency: 80,
-      quantity: 1,
-    });
-
+    // Pulsing glow + scale breathe on portal
     this.tweens.add({
       targets: this.exit,
-      alpha: 0.7, yoyo: true, repeat: -1,
-      duration: 700, ease: 'Sine.easeInOut',
+      alpha: 0.75, scaleY: 1.06,
+      yoyo: true, repeat: -1,
+      duration: 900, ease: 'Sine.easeInOut',
+    });
+
+    // Richer beam particles
+    this.add.particles(x, y + 8, 'spark', {
+      x: { min: -13, max: 13 },
+      y: { min: -26, max: 26 },
+      scale: { start: 0.6, end: 0 },
+      alpha: { start: 0.9, end: 0 },
+      speed: { min: 15, max: 55 },
+      tint: [0xffffff, 0xffe0ff, 0xc8a0ff, 0xa080ff],
+      lifespan: 1000,
+      frequency: 55,
+      quantity: 2,
+      blendMode: 'ADD',
+    });
+
+    // Spinning rune ring orbiting the portal
+    const runeGfx = this.add.graphics();
+    runeGfx.setDepth(1);
+    let runeAngle = 0;
+    this.time.addEvent({
+      delay: 33, repeat: -1,
+      callback: () => {
+        if (this.finished) return;
+        runeGfx.clear();
+        runeAngle += 4;
+        for (let i = 0; i < 6; i++) {
+          const a = Phaser.Math.DegToRad(runeAngle + i * 60);
+          const rx = x + Math.cos(a) * 26;
+          const ry = y + Math.sin(a) * 13;
+          const alpha = 0.45 + Math.sin(Phaser.Math.DegToRad(runeAngle * 3 + i * 60)) * 0.3;
+          runeGfx.fillStyle(0xb090ff, alpha);
+          runeGfx.fillCircle(rx, ry, 2.5);
+        }
+      },
     });
   }
 
@@ -212,6 +246,22 @@ export default class LevelScene extends Phaser.Scene {
   _buildInput() {
     this.cursors = this.input.keyboard.createCursorKeys();
     this.actionKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
+
+    // ESC toggles pause
+    const escKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
+    escKey.on('down', () => { if (!this.finished) this._togglePause(); });
+  }
+
+  _togglePause() {
+    this.isPaused = !this.isPaused;
+    if (this.isPaused) {
+      this.physics.pause();
+      this.tweens.pauseAll();
+    } else {
+      this.physics.resume();
+      this.tweens.resumeAll();
+    }
+    this.events.emit('game_paused', this.isPaused);
   }
 
   _buildCollisions() {
@@ -233,6 +283,8 @@ export default class LevelScene extends Phaser.Scene {
     this.physics.add.overlap(this.projectiles, this.enemies, (proj, enemy) => {
       if (enemy.isDead) return;
       enemy.takeDamage(proj.damage ?? 1);
+      proj._emitCombo?.();
+      this.cameras.main.shake(40, 0.003);
       proj.destroy();
     });
 
@@ -242,6 +294,22 @@ export default class LevelScene extends Phaser.Scene {
   _setupEvents() {
     this.events.once('player_died', () => this._loseLevel());
     this.events.on('enemy_killed', ({ x, y }) => {
+      // Screen shake + death burst
+      this.cameras.main.shake(65, 0.004);
+      const burst = this.add.particles(x, y, 'spark', {
+        scale: { start: 0.6, end: 0 },
+        speed: { min: 40, max: 100 },
+        alpha: { start: 0.9, end: 0 },
+        lifespan: 350,
+        quantity: 6,
+        emitting: false,
+        tint: [0xff4040, 0xff8040, 0xffffff],
+        blendMode: 'ADD',
+      });
+      burst.explode(6);
+      this.time.delayedCall(400, () => burst.destroy());
+
+      // Drop a collectible spark
       const s = this.sparks.create(x, y - 8, 'orb');
       s.body.setSize(14, 14);
       this.tweens.add({
@@ -256,11 +324,11 @@ export default class LevelScene extends Phaser.Scene {
       speed: { min: 50, max: 120 },
       alpha: { start: 1, end: 0 },
       lifespan: 400,
-      quantity: 6,
+      quantity: 7,
       emitting: false,
-      tint: [0xffffff, 0xffe0ff, 0xc8a0ff],
+      tint: this._getSparkTint(),
     });
-    burst.explode(6);
+    burst.explode(7);
     this.time.delayedCall(500, () => burst.destroy());
   }
 

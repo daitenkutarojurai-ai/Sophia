@@ -69,6 +69,7 @@ export default class Jesus extends Phaser.Physics.Arcade.Sprite {
     const dir = this.flipX ? 1 : -1;
     this.setVelocity(dir * 160, -200);
 
+    this.scene.cameras.main.shake(110, 0.008);
     this.scene.events.emit('hp_updated', this.hp);
     this.scene.time.delayedCall(500, () => {
       this.isHurt = false;
@@ -100,7 +101,7 @@ export default class Jesus extends Phaser.Physics.Arcade.Sprite {
     proj.damage = DATA.attackDamage;
     this.scene.projectiles?.add(proj);
 
-    // Trail tween
+    // Pulse scale tween on the projectile
     this.scene.tweens.add({
       targets: proj,
       scale: 1.3,
@@ -108,6 +109,23 @@ export default class Jesus extends Phaser.Physics.Arcade.Sprite {
       duration: 200,
       repeat: -1,
     });
+
+    // Trailing light particles
+    const trail = this.scene.add.particles(px, py, 'spark', {
+      follow: proj,
+      scale: { start: 0.35, end: 0 },
+      alpha: { start: 0.8, end: 0 },
+      speed: { min: 5, max: 18 },
+      tint: [0xffffff, 0xc8d0ff, 0x8090ff],
+      lifespan: 220,
+      frequency: 25,
+      quantity: 1,
+      blendMode: 'ADD',
+    });
+    proj.once('destroy', () => { if (trail?.active) trail.destroy(); });
+
+    // Emit combo_hit event when projectile will hit (handled in collider)
+    proj._emitCombo = () => this.scene.events.emit('combo_hit');
 
     this.scene.time.delayedCall(250, () => { this.isCasting = false; });
   }
