@@ -213,6 +213,19 @@ sophia-game/
 
 ## 8. TO DO
 
+### ✅ Done (v0.5.0 — First Boss)
+- [x] **ArchonBoss base class** — `entities/ArchonBoss.js`. HP, phase index advances on damage thresholds, hit-stun invuln, takeDamage hook, death burst + camera shake/flash, emits `boss_activated` / `boss_hp` / `boss_killed` events. Subclasses override `_runAI`, `_onActivate`, `_onPhaseChange`, `_onDeath`.
+- [x] **Authades boss fight** — `entities/Authades.js`, Archon I "The Self-Willed", Fire. 3 phases:
+  - Phase 0 — single fireball spat at the player.
+  - Phase 1 — telegraphed lunging charge across the arena (teaches dash).
+  - Phase 2 — alternating 3-fireball spread + faster charges.
+  - Persistent fire-aura particle emitter. Roar (camera shake + flash) on activate, name plate fades over 1.5 s.
+- [x] **Boss arena trigger** — LevelScene crosses `boss.triggerX` → invisible static walls seal `arenaX..arenaX+arenaWidth`, camera bounds clamp to arena, exit portal stays sealed (invisible + body off + particles/runes hidden) until boss dies, then walls drop, camera bounds restore, and exit reveals.
+- [x] **Boss HP bar UI** — UIScene draws a centered red bar at the bottom with the Archon's name + title above it. Tween-animated drain on damage; fades on kill.
+- [x] **Boss lore panel** — On defeat, a centered framed panel shows `"<NAME> — DEFEATED"` plus a 3-line lore quotation, then auto-fades after 2.8 s.
+- [x] **Enemy projectiles group** — `enemyProjectiles` physics group with global player-overlap (damages + destroys) and platform-collision (destroys). Lifespan-based despawn in `_updateProjectiles`.
+- [x] **Authades + fireball sprites** — `SpriteFactory._authadesBoss` (56×56, lion-Archon with mane/fangs/burning eyes/crown) and `SpriteFactory._fireball` (16×16 hot-core orb).
+
 ### ✅ Done (v0.4.0 — Polish Pass)
 - [x] **Difficulty scaling per act** — ArchonScout speed × 1.22 per level, HP scales 2→3→4
 - [x] **Enemy HP bar** — small red bar above each Archon Scout, depletes on hit
@@ -235,12 +248,7 @@ sophia-game/
   - Stealth sections (avoid Archon patrols)
   - 13 repentance prayers = collectible lore items
   - Jesus appears at end of Act 2 (hearing her cries)
-- [ ] **ArchonBoss base class** — reusable boss framework
-  - HP bar, phases (2–3 per boss), attack patterns
-  - Death animation + Archon lore panel on defeat
-- [ ] **Authades boss fight** — Act 1 mini-boss
-  - First boss: fire attacks, self-willed charge
-  - Teaches: dash mechanic is key to survive
+- [ ] **More Archon bosses** — extend ArchonBoss for Paraplex (#2 Shadow), Hekate (#3 Illusion), Ariouth (#4 Earth) using the `BOSSES` / `BOSS_CLASSES` registry pattern set up by Authades.
 
 ### 🟡 Medium Priority
 - [ ] **Act3Scene** — The Ascent
@@ -352,3 +360,6 @@ npx cap open android
 - **Combo counter resets after 1.5s of no hits** — generous window keeps combos feel achievable.
 - **ArchonScout difficulty: speed × (1 + levelIndex × 0.22)** — Act I patrol 55→67→78px/s across acts.
 - **Pause via physics.pause() + tweens.pauseAll()** — UIScene stays active and handles ESC-to-resume.
+- **Bosses live in the `enemies` group** — ArchonBoss extends `Phaser.Physics.Arcade.Sprite` and `LevelScene._buildBoss` adds it to `this.enemies` so the existing platform-collider, melee iteration, projectile→enemy overlap, and player-touch overlap all cover it for free. Boss-specific behavior is `boss.update()` (called via the enemies forEach in the scene update). Boss starts with `setActive(false)` + `body.enable=false` and is revealed by `_triggerBossArena()` when the player crosses `level.boss.triggerX`.
+- **Boss arena = invisible static walls in `platforms`** — On trigger, two transparent rectangles at `arenaX-4` and `arenaX+arenaWidth` are added to the platforms group; the camera is clamped to the arena bounds. On `boss_killed`, walls are removed and bounds restored.
+- **Exit sealing on boss levels** — When `level.boss` is present, `_buildExit` keeps the portal invisible + `body.enable=false` and stops its particle emitter / hides its rune ring. `_onBossKilled` re-enables everything and fades the portal in.

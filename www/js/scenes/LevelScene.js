@@ -1,7 +1,10 @@
-import { WIDTH, HEIGHT, LEVELS } from '../constants.js';
+import { WIDTH, HEIGHT, LEVELS, BOSSES } from '../constants.js';
 import Sophia from '../entities/Sophia.js';
 import Jesus from '../entities/Jesus.js';
 import ArchonScout from '../entities/ArchonScout.js';
+import Authades from '../entities/Authades.js';
+
+const BOSS_CLASSES = { authades: Authades };
 
 export default class LevelScene extends Phaser.Scene {
   constructor() { super({ key: 'Level' }); }
@@ -37,6 +40,7 @@ export default class LevelScene extends Phaser.Scene {
     this._buildEnemies();
     this._buildProjectiles();
     this._buildExit();
+    this._buildBoss();
     this._buildAtmosphereFX();
     this._buildInput();
     this._buildCollisions();
@@ -55,8 +59,10 @@ export default class LevelScene extends Phaser.Scene {
     if (this.finished || this.isPaused) return;
     this.levelTimer += delta;
     this.player.update(time, delta);
+    // Boss is also in `enemies`, so the forEach below covers its update().
     this.enemies.getChildren().forEach(e => e.update?.(time, delta));
     this._updateProjectiles(delta);
+    this._updateBossTrigger();
 
     // Parallax
     const sx = this.cameras.main.scrollX;
@@ -154,12 +160,20 @@ export default class LevelScene extends Phaser.Scene {
 
   _buildProjectiles() {
     this.projectiles = this.physics.add.group({ allowGravity: false });
+    this.enemyProjectiles = this.physics.add.group({ allowGravity: false });
   }
 
   _buildExit() {
     const [x, y] = this.level.exit;
     this.exit = this.physics.add.staticImage(x, y, 'portal');
     this.exit.body.setSize(32, 48).setOffset(4, 4);
+
+    // Boss levels keep the exit sealed until the Archon falls.
+    this._exitSealed = !!this.level.boss;
+    if (this._exitSealed) {
+      this.exit.setVisible(false);
+      this.exit.body.enable = false;
+    }
 
     // Pulsing glow + scale breathe on portal
     this.tweens.add({
@@ -170,7 +184,7 @@ export default class LevelScene extends Phaser.Scene {
     });
 
     // Richer beam particles
-    this.add.particles(x, y + 8, 'spark', {
+    this._exitParticles = this.add.particles(x, y + 8, 'spark', {
       x: { min: -13, max: 13 },
       y: { min: -26, max: 26 },
       scale: { start: 0.6, end: 0 },
@@ -182,15 +196,18 @@ export default class LevelScene extends Phaser.Scene {
       quantity: 2,
       blendMode: 'ADD',
     });
+    if (this._exitSealed) this._exitParticles.stop();
 
     // Spinning rune ring orbiting the portal
     const runeGfx = this.add.graphics();
     runeGfx.setDepth(1);
+    this._exitRunes = runeGfx;
+    if (this._exitSealed) runeGfx.setVisible(false);
     let runeAngle = 0;
     this.time.addEvent({
       delay: 33, repeat: -1,
       callback: () => {
-        if (this.finished) return;
+        if (this.finished || !runeGfx.visible) return;
         runeGfx.clear();
         runeAngle += 4;
         for (let i = 0; i < 6; i++) {
@@ -201,6 +218,118 @@ export default class LevelScene extends Phaser.Scene {
           runeGfx.fillStyle(0xb090ff, alpha);
           runeGfx.fillCircle(rx, ry, 2.5);
         }
+      },
+    });
+  }
+
+  // ── Boss arena ─────────────────────────────────────────────────────────────
+
+  _buildBoss() {
+    const cfg = this.level.boss;
+    if (!cfg) return;
+    const data = BOSSES[cfg.id];
+    const Cls = BOSS_CLASSES[cfg.id];
+    if (!data || !Cls) return;
+
+    this._bossSpec = cfg;
+    this.boss = new Cls(this, cfg.spawnX, cfg.spawnY, data);
+    // Drop boss into the enemies group so existing platform/melee/projectile
+    // collisions cover it automatically.
+    this.enemies.add(this.boss);
+    // Boss starts hidden + still until the player crosses triggerX.
+    this.boss.setAlpha(0);
+    this.boss.setActive(false);
+    this.boss.body.enable = false;
+    this._bossTriggered = false;
+    this._arenaWalls = [];
+  }
+
+  _updateBossTrigger() {
+    if (!this.boss || this._bossTriggered) return;
+    if (this.player.x < this._bossSpec.triggerX) return;
+    this._triggerBossArena();
+  }
+
+  _triggerBossArena() {
+    this._bossTriggered = true;
+    const { arenaX, arenaWidth } = this._bossSpec;
+    const rightX = arenaX + arenaWidth;
+
+    // Invisible arena walls — physics-only.
+    const wallL = this.add.rectangle(arenaX - 4, 0, 4, HEIGHT, 0x000000, 0).setOrigin(0);
+    const wallR = this.add.rectangle(rightX, 0, 4, HEIGHT, 0x000000, 0).setOrigin(0);
+    [wallL, wallR].forEach(w => {
+      this.physics.add.existing(w, true);
+      this.platforms.add(w);
+      this._arenaWalls.push(w);
+    });
+
+    // Camera locks onto the arena for the fight.
+    this.cameras.main.setBounds(arenaX, 0, arenaWidth, HEIGHT);
+
+    // Reveal + activate boss.
+    this.boss.setActive(true);
+    this.boss.body.enable = true;
+    this.tweens.add({
+      targets: this.boss, alpha: 1, duration: 400,
+      onComplete: () => this.boss?.activate(),
+    });
+  }
+
+  _onBossKilled(cfg) {
+    // Drop arena walls + restore camera bounds.
+    this._arenaWalls.forEach(w => {
+      this.platforms.remove(w, true, true);
+    });
+    this._arenaWalls = [];
+    this.cameras.main.setBounds(0, 0, this.level.worldWidth, HEIGHT);
+
+    // Clear lingering enemy projectiles.
+    this.enemyProjectiles.getChildren().forEach(p => p.destroy());
+
+    // Reveal + arm exit.
+    if (this._exitSealed) {
+      this._exitSealed = false;
+      this.exit.setVisible(true);
+      this.exit.body.enable = true;
+      this._exitParticles?.start();
+      this._exitRunes?.setVisible(true);
+      this.tweens.add({
+        targets: this.exit, alpha: { from: 0, to: 1 },
+        duration: 600,
+      });
+    }
+
+    this._showBossLore(cfg);
+  }
+
+  _showBossLore(cfg) {
+    const cam = this.cameras.main;
+    const w = WIDTH - 60, h = 78;
+    const cx = cam.width / 2, cy = cam.height / 2;
+    const bg = this.add.rectangle(cx, cy, w, h, 0x000000, 0.82)
+      .setScrollFactor(0).setDepth(160).setStrokeStyle(1, cfg.barColor ?? 0xffe060);
+    const title = this.add.text(cx, cy - 26,
+      `${cfg.name.toUpperCase()} — DEFEATED`, {
+        fontFamily: 'monospace', fontSize: '10px',
+        color: '#ffe060', stroke: '#000', strokeThickness: 3,
+      }).setOrigin(0.5).setScrollFactor(0).setDepth(161);
+    const lore = this.add.text(cx, cy + 4, cfg.lore ?? '', {
+        fontFamily: 'monospace', fontSize: '7px',
+        color: '#c8a0ff', align: 'center', lineSpacing: 3,
+      }).setOrigin(0.5).setScrollFactor(0).setDepth(161);
+
+    const group = [bg, title, lore];
+    group.forEach(o => o.setAlpha(0));
+    this.tweens.add({
+      targets: group, alpha: 1, duration: 400,
+      onComplete: () => {
+        this.time.delayedCall(2800, () => {
+          this.tweens.add({
+            targets: group, alpha: 0, duration: 600,
+            onComplete: () => group.forEach(o => o.destroy()),
+          });
+        });
       },
     });
   }
@@ -269,6 +398,13 @@ export default class LevelScene extends Phaser.Scene {
     this.physics.add.collider(this.enemies, this.platforms);
     this.physics.add.collider(this.projectiles, this.platforms,
       (proj) => proj.destroy());
+    this.physics.add.collider(this.enemyProjectiles, this.platforms,
+      (proj) => proj.destroy());
+    this.physics.add.overlap(this.player, this.enemyProjectiles, (_p, proj) => {
+      if (!proj.active) return;
+      this.player.takeDamage(proj.touchDamage ?? 1);
+      proj.destroy();
+    });
 
     this.physics.add.overlap(this.player, this.sparks, (_p, spark) => {
       this._emitCollectFX(spark.x, spark.y);
@@ -293,6 +429,7 @@ export default class LevelScene extends Phaser.Scene {
 
   _setupEvents() {
     this.events.once('player_died', () => this._loseLevel());
+    this.events.on('boss_killed', (cfg) => this._onBossKilled(cfg));
     this.events.on('enemy_killed', ({ x, y }) => {
       // Screen shake + death burst
       this.cameras.main.shake(65, 0.004);
@@ -334,6 +471,11 @@ export default class LevelScene extends Phaser.Scene {
 
   _updateProjectiles(delta) {
     for (const p of this.projectiles.getChildren()) {
+      p.lifespan -= delta;
+      if (p.lifespan <= 0) p.destroy();
+    }
+    for (const p of this.enemyProjectiles.getChildren()) {
+      if (p.lifespan == null) continue;
       p.lifespan -= delta;
       if (p.lifespan <= 0) p.destroy();
     }

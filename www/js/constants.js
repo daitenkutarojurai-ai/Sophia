@@ -1,6 +1,6 @@
 // ─── GAME CONSTANTS ───────────────────────────────────────────────────────────
 
-export const GAME_VERSION = '0.4.0';
+export const GAME_VERSION = '0.5.0';
 
 // Canvas base resolution (scaled up by Phaser)
 export const WIDTH  = 480;
@@ -57,9 +57,35 @@ export const ARCHONS = [
   { id: 13, name: 'The Veil',    title: 'The Final Boundary',  element: 'Void'        },
 ];
 
+// ─── BOSSES ───────────────────────────────────────────────────────────────────
+// Reusable boss configs consumed by ArchonBoss subclasses (Authades, etc).
+// `arenaX`/`arenaWidth` define an invisible-walled fight zone inside the level.
+// `triggerX` is where the player must cross to spawn the encounter.
+
+export const BOSSES = {
+  authades: {
+    archonId: 1,
+    name: 'Authades',
+    title: 'The Self-Willed',
+    element: 'Fire',
+    texture: 'authades',
+    hp: 12,
+    phaseCount: 3,
+    bodyW: 32, bodyH: 36,
+    bodyOX: 12, bodyOY: 14,
+    deathTints: [0xffffff, 0xffe060, 0xff8020, 0xff3010],
+    barColor: 0xff5020,
+    lore:
+      '"Authades, Self-Willed, knew no master.\n' +
+      'His fire blazed in pride — but Sophia\'s\n' +
+      'swift feet outpaced even his fury."',
+  },
+};
+
 // ─── LEVELS ───────────────────────────────────────────────────────────────────
 // Three Acts: The Fall → The Chaos → The Ascent.
 // Each level references a Gnostic stage; bgKey selects background texture.
+// `boss` (optional): { id, x, y, triggerX, arenaX, arenaWidth }
 
 export const LEVELS = [
   {
@@ -97,7 +123,13 @@ export const LEVELS = [
       [180, 220], [360, 180], [540, 140], [740, 170],
       [1000, 130], [1160, 90], [1340, 220],
     ],
-    exit: [1520, 222],
+    boss: {
+      id: 'authades',
+      spawnX: 1500, spawnY: 210,
+      triggerX: 1280,
+      arenaX: 1260, arenaWidth: 320,
+    },
+    exit: [1560, 222],
   },
   {
     id: 2,
