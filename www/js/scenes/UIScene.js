@@ -57,6 +57,7 @@ export default class UIScene extends Phaser.Scene {
     // Floating lore banner — non-blocking, auto-fade
     this._buildLoreBanner();
     this._buildComboCounter();
+    this._buildBossBar();
     this._buildPauseOverlay();
 
     // Subscribe to level events
@@ -65,6 +66,9 @@ export default class UIScene extends Phaser.Scene {
     levelScene.events.on('sparks_updated', n  => this._sparks.setText(String(n)));
     levelScene.events.on('combo_hit',      () => this._onComboHit());
     levelScene.events.on('game_paused',    p  => this._setPaused(p));
+    levelScene.events.on('boss_activated', b  => this._onBossActivated(b));
+    levelScene.events.on('boss_hp',        d  => this._onBossHp(d));
+    levelScene.events.on('boss_killed',    () => this._onBossKilled());
 
     // ESC resumes game while UI scene is active (level scene may be paused)
     this.input.keyboard.on('keydown-ESC', () => {
@@ -126,6 +130,51 @@ export default class UIScene extends Phaser.Scene {
     this._comboTimer = this.time.delayedCall(1500, () => {
       this._comboCount = 0;
       this._comboText.setText('');
+    });
+  }
+
+  _buildBossBar() {
+    const w = WIDTH - 60, h = 6;
+    const cx = WIDTH / 2, y = HEIGHT - 32;
+    const frame = this.add.rectangle(cx, y, w + 4, h + 4, 0x000000, 0.8)
+      .setScrollFactor(0).setDepth(140);
+    const fill = this.add.rectangle(cx - w / 2, y, w, h, 0xff5020, 1)
+      .setOrigin(0, 0.5).setScrollFactor(0).setDepth(141);
+    const label = this.add.text(cx, y - 11, '', {
+      fontFamily: 'monospace', fontSize: '8px',
+      color: '#ffe060', stroke: '#000', strokeThickness: 2,
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(141);
+
+    this._bossBar = { frame, fill, label, fullWidth: w };
+    [frame, fill, label].forEach(o => o.setVisible(false));
+  }
+
+  _onBossActivated(boss) {
+    if (!this._bossBar) return;
+    const { frame, fill, label } = this._bossBar;
+    label.setText(`${boss.bossName.toUpperCase()} — ${boss.bossTitle}`);
+    [frame, fill, label].forEach(o => { o.setVisible(true); o.setAlpha(0); });
+    fill.width = this._bossBar.fullWidth;
+    this.tweens.add({ targets: [frame, fill, label], alpha: 1, duration: 350 });
+  }
+
+  _onBossHp({ hp, max }) {
+    if (!this._bossBar?.fill.visible) return;
+    const ratio = Math.max(0, hp / max);
+    this.tweens.killTweensOf(this._bossBar.fill);
+    this.tweens.add({
+      targets: this._bossBar.fill,
+      width: this._bossBar.fullWidth * ratio,
+      duration: 200, ease: 'Sine.easeOut',
+    });
+  }
+
+  _onBossKilled() {
+    if (!this._bossBar) return;
+    const { frame, fill, label } = this._bossBar;
+    this.tweens.add({
+      targets: [frame, fill, label], alpha: 0, duration: 600,
+      onComplete: () => [frame, fill, label].forEach(o => o.setVisible(false)),
     });
   }
 

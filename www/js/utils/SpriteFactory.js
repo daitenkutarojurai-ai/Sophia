@@ -25,7 +25,131 @@ export default class SpriteFactory {
     SpriteFactory._aeonGate(scene);
     SpriteFactory._yaldabaothSilhouette(scene);
     SpriteFactory._archonSilhouette(scene);
+    SpriteFactory._authadesBoss(scene);
+    SpriteFactory._fireball(scene);
     SpriteFactory._crown(scene);
+  }
+
+  // ── Authades — the Self-Willed (Archon I, Fire) ────────────────────────────
+
+  static _authadesBoss(scene) {
+    const fw = 56, fh = 56, frames = 2;
+    const { canvas, ctx } = SpriteFactory._canvas(fw * frames, fh);
+
+    for (let i = 0; i < frames; i++) {
+      const ox = i * fw;
+      const cx = ox + fw / 2;
+      const bob = i === 0 ? 0 : -1;
+
+      // Outer fire halo
+      const halo = ctx.createRadialGradient(cx, 28 + bob, 6, cx, 28 + bob, 30);
+      halo.addColorStop(0, 'rgba(255, 220, 80, 0.55)');
+      halo.addColorStop(0.5, 'rgba(255, 100, 30, 0.35)');
+      halo.addColorStop(1, 'rgba(120, 0, 0, 0)');
+      ctx.fillStyle = halo;
+      ctx.fillRect(ox, 0, fw, fh);
+
+      // Mane (jagged spikes around head)
+      ctx.fillStyle = '#a02010';
+      const spikeOffset = i === 0 ? 0 : 1;
+      for (let s = 0; s < 14; s++) {
+        const a = (s / 14) * Math.PI * 2 + spikeOffset * 0.1;
+        const r1 = 16, r2 = 24 + (s % 2) * 2;
+        SpriteFactory._triangle(ctx,
+          cx + Math.cos(a) * r1, 24 + bob + Math.sin(a) * r1,
+          cx + Math.cos(a + 0.18) * r1, 24 + bob + Math.sin(a + 0.18) * r1,
+          cx + Math.cos(a + 0.09) * r2, 24 + bob + Math.sin(a + 0.09) * r2);
+      }
+      // Mane gradient highlight
+      ctx.fillStyle = 'rgba(255, 120, 30, 0.6)';
+      for (let s = 0; s < 7; s++) {
+        const a = (s / 7) * Math.PI * 2 + spikeOffset * 0.1;
+        SpriteFactory._triangle(ctx,
+          cx + Math.cos(a) * 14, 24 + bob + Math.sin(a) * 14,
+          cx + Math.cos(a + 0.15) * 14, 24 + bob + Math.sin(a + 0.15) * 14,
+          cx + Math.cos(a + 0.07) * 22, 24 + bob + Math.sin(a + 0.07) * 22);
+      }
+
+      // Lion head body
+      ctx.fillStyle = '#7a1010';
+      SpriteFactory._circle(ctx, cx, 24 + bob, 14);
+      // Face plate
+      const faceG = ctx.createLinearGradient(0, 18 + bob, 0, 36 + bob);
+      faceG.addColorStop(0, '#c04020');
+      faceG.addColorStop(1, '#5a0808');
+      ctx.fillStyle = faceG;
+      SpriteFactory._circle(ctx, cx, 24 + bob, 11);
+
+      // Snout
+      ctx.fillStyle = '#3a0808';
+      ctx.fillRect(cx - 4, 28 + bob, 8, 5);
+      // Nose
+      ctx.fillStyle = '#1a0000';
+      ctx.fillRect(cx - 2, 29 + bob, 4, 2);
+
+      // Glowing burning eyes
+      const eyeGlow = ctx.createRadialGradient(cx, 22 + bob, 0.5, cx, 22 + bob, 7);
+      eyeGlow.addColorStop(0, '#ffffe0');
+      eyeGlow.addColorStop(0.5, '#ffa030');
+      eyeGlow.addColorStop(1, 'rgba(180, 30, 0, 0)');
+      ctx.fillStyle = eyeGlow;
+      ctx.fillRect(cx - 8, 18 + bob, 16, 8);
+      ctx.fillStyle = '#ffe040';
+      ctx.fillRect(cx - 5, 22 + bob, 3, 2);
+      ctx.fillRect(cx + 2, 22 + bob, 3, 2);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(cx - 5, 22 + bob, 1, 1);
+      ctx.fillRect(cx + 2, 22 + bob, 1, 1);
+
+      // Fangs
+      ctx.fillStyle = '#fff8d0';
+      SpriteFactory._triangle(ctx, cx - 3, 32 + bob, cx - 1, 32 + bob, cx - 2, 36 + bob);
+      SpriteFactory._triangle(ctx, cx + 1, 32 + bob, cx + 3, 32 + bob, cx + 2, 36 + bob);
+
+      // Crown / horn (sign of the Self-Willed)
+      ctx.fillStyle = '#ffd040';
+      SpriteFactory._triangle(ctx, cx - 4, 11 + bob, cx, 5 + bob, cx + 4, 11 + bob);
+      ctx.fillStyle = '#ff8020';
+      ctx.fillRect(cx - 1, 7 + bob, 2, 4);
+
+      // Lower body silhouette / claws
+      ctx.fillStyle = '#3a0408';
+      ctx.fillRect(cx - 12, 40, 24, 12);
+      // Claws
+      for (let c = 0; c < 4; c++) {
+        SpriteFactory._triangle(ctx,
+          cx - 12 + c * 8, 52,
+          cx - 10 + c * 8, 56,
+          cx - 8 + c * 8, 52);
+      }
+
+      // Hurt overlay (frame 1 = subtle damage tint)
+      if (i === 1) {
+        ctx.fillStyle = 'rgba(255, 200, 100, 0.15)';
+        ctx.fillRect(ox, 0, fw, fh);
+      }
+    }
+
+    SpriteFactory._addSheet(scene, 'authades', canvas, fw, fh);
+  }
+
+  // ── Fireball — boss projectile ─────────────────────────────────────────────
+
+  static _fireball(scene) {
+    const { canvas, ctx } = SpriteFactory._canvas(16, 16);
+    // Outer flame halo
+    const halo = ctx.createRadialGradient(8, 8, 1, 8, 8, 8);
+    halo.addColorStop(0, '#fff8c0');
+    halo.addColorStop(0.4, '#ff8020');
+    halo.addColorStop(1, 'rgba(180, 0, 0, 0)');
+    ctx.fillStyle = halo;
+    ctx.fillRect(0, 0, 16, 16);
+    // Hot core
+    ctx.fillStyle = '#ffe060';
+    SpriteFactory._circle(ctx, 8, 8, 3);
+    ctx.fillStyle = '#ffffff';
+    SpriteFactory._circle(ctx, 7, 7, 1.2);
+    SpriteFactory._addImage(scene, 'fireball', canvas);
   }
 
   // ── Sophia — the Light-Maiden, angelic gold form ──────────────────────────
