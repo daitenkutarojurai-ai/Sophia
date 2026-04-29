@@ -213,6 +213,28 @@ sophia-game/
 
 ## 8. TO DO
 
+### ✅ Done (v0.6.0 — Act I Boss Gauntlet)
+- [x] **Paraplex boss fight** — `entities/Paraplex.js`, Archon II "The Confuser", Shadow. 3 phases:
+  - Phase 0 — single shadow bolt aimed at the player.
+  - Phase 1 — alternates blink-teleport (fade out → reposition inside arena → fade in) and double-bolt.
+  - Phase 2 — alternates faster blinks and 5-bolt fan spread.
+  - Hovering boss (no gravity), constant violet/indigo aura particles, vertical sine bob.
+- [x] **Hekate boss fight** — `entities/Hekate.js`, Archon III "The Triple-Faced", Illusion. 3 phases:
+  - Phase 0 — triple mirror-orb fan aimed at the player.
+  - Phase 1 — Hekate strafes horizontally inside the arena; one cosmetic decoy clone appears at a fixed slot, flaring at each attack.
+  - Phase 2 — second decoy spawns; alternates the fan attack and a 6-orb rotary burst.
+  - Hovering boss with cyan/teal mirror aura. Decoys are visual only — no damaging projectiles fired by them.
+- [x] **Ariouth boss fight** — `entities/Ariouth.js`, Archon IV "The Devourer", Earth. 3 phases:
+  - Phase 0 — leap-and-slam stomp that spawns 3 falling rocks across the arena.
+  - Phase 1 — alternates stomp and rolling boulder shockwave (low-flying, no gravity).
+  - Phase 2 — alternates 5-rock stomp and faster boulder.
+  - Heavy ground-bound boss, dust aura particles, gravity on (uses leap timing).
+- [x] **3 new Act I levels** — Aeon II (Paraplex), Aeon III (Hekate), Aeon IV (Ariouth) inserted into `LEVELS` between Aeon I (Authades) and the existing Act II level. Each ~1700–1900px wide with platforms, sparks, scout enemies, sealed boss arena, and the standard exit-portal flow.
+- [x] **`BOSSES` registry expanded** — `paraplex`, `hekate`, `ariouth` configs added next to `authades`. Each carries hp, phaseCount, body dims, deathTints, barColor, and a 3-line lore quotation.
+- [x] **`BOSS_CLASSES` map extended in LevelScene** — registers Paraplex, Hekate, Ariouth alongside Authades; level data drives spawn via `level.boss.id`.
+- [x] **Boss + projectile sprites** — `SpriteFactory._paraplexBoss` (hooded violet figure with multi-eyes), `_shadowBolt` (violet bolt), `_hekateBoss` (triple-faced cyan figure with chest-mirror), `_mirrorOrb` (cyan sheen orb), `_ariouthBoss` (toothed maw with stone shell), `_rockShard` (jagged earth chunk).
+- [x] **Act II level renamed** — "Aeon VI — The Storm of Sabaoth" (was Paraplex; now Paraplex is an Act I boss, so Act II uses canonical Sabaoth-the-Storm).
+
 ### ✅ Done (v0.5.0 — First Boss)
 - [x] **ArchonBoss base class** — `entities/ArchonBoss.js`. HP, phase index advances on damage thresholds, hit-stun invuln, takeDamage hook, death burst + camera shake/flash, emits `boss_activated` / `boss_hp` / `boss_killed` events. Subclasses override `_runAI`, `_onActivate`, `_onPhaseChange`, `_onDeath`.
 - [x] **Authades boss fight** — `entities/Authades.js`, Archon I "The Self-Willed", Fire. 3 phases:
@@ -248,7 +270,7 @@ sophia-game/
   - Stealth sections (avoid Archon patrols)
   - 13 repentance prayers = collectible lore items
   - Jesus appears at end of Act 2 (hearing her cries)
-- [ ] **More Archon bosses** — extend ArchonBoss for Paraplex (#2 Shadow), Hekate (#3 Illusion), Ariouth (#4 Earth) using the `BOSSES` / `BOSS_CLASSES` registry pattern set up by Authades.
+- [ ] **More Archon bosses (Acts II–III)** — extend ArchonBoss for Sabaoth (#6 Storm), Adonaios (#7 Void), Astaphaios (#8 Acid) for Act II; Ailoaios (#9 Mirror), Oraios (#10 Corrupt Light), Adamas (#11 Stone), Sabaoth-Repentant (#12), and The Veil (#13) for Act III / Finale. Use the `BOSSES` / `BOSS_CLASSES` registry pattern.
 
 ### 🟡 Medium Priority
 - [ ] **Act3Scene** — The Ascent
