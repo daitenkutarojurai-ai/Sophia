@@ -27,6 +27,12 @@ export default class SpriteFactory {
     SpriteFactory._archonSilhouette(scene);
     SpriteFactory._authadesBoss(scene);
     SpriteFactory._fireball(scene);
+    SpriteFactory._paraplexBoss(scene);
+    SpriteFactory._shadowBolt(scene);
+    SpriteFactory._hekateBoss(scene);
+    SpriteFactory._mirrorOrb(scene);
+    SpriteFactory._ariouthBoss(scene);
+    SpriteFactory._rockShard(scene);
     SpriteFactory._crown(scene);
   }
 
@@ -150,6 +156,365 @@ export default class SpriteFactory {
     ctx.fillStyle = '#ffffff';
     SpriteFactory._circle(ctx, 7, 7, 1.2);
     SpriteFactory._addImage(scene, 'fireball', canvas);
+  }
+
+  // ── Paraplex — the Confuser (Archon II, Shadow) ────────────────────────────
+
+  static _paraplexBoss(scene) {
+    const fw = 56, fh = 56, frames = 2;
+    const { canvas, ctx } = SpriteFactory._canvas(fw * frames, fh);
+
+    for (let i = 0; i < frames; i++) {
+      const ox = i * fw;
+      const cx = ox + fw / 2;
+      const bob = i === 0 ? 0 : -2;
+
+      // Outer void halo
+      const halo = ctx.createRadialGradient(cx, 28 + bob, 4, cx, 28 + bob, 30);
+      halo.addColorStop(0, 'rgba(120, 80, 220, 0.55)');
+      halo.addColorStop(0.5, 'rgba(60, 20, 150, 0.35)');
+      halo.addColorStop(1, 'rgba(20, 0, 60, 0)');
+      ctx.fillStyle = halo;
+      ctx.fillRect(ox, 0, fw, fh);
+
+      // Trailing shadow tendrils
+      ctx.fillStyle = 'rgba(60, 20, 120, 0.65)';
+      for (let s = 0; s < 8; s++) {
+        const a = (s / 8) * Math.PI * 2 + (i ? 0.15 : 0);
+        const r1 = 16, r2 = 26 + (s % 2) * 3;
+        SpriteFactory._triangle(ctx,
+          cx + Math.cos(a) * r1, 28 + bob + Math.sin(a) * r1,
+          cx + Math.cos(a + 0.22) * r1, 28 + bob + Math.sin(a + 0.22) * r1,
+          cx + Math.cos(a + 0.11) * r2, 28 + bob + Math.sin(a + 0.11) * r2);
+      }
+
+      // Hooded body
+      const robeG = ctx.createLinearGradient(0, 14 + bob, 0, 48);
+      robeG.addColorStop(0, '#3a1080');
+      robeG.addColorStop(0.6, '#1a0050');
+      robeG.addColorStop(1, '#08001a');
+      ctx.fillStyle = robeG;
+      ctx.beginPath();
+      ctx.moveTo(cx - 8, 14 + bob);
+      ctx.quadraticCurveTo(cx - 16, 28, cx - 14, 48);
+      ctx.lineTo(cx + 14, 48);
+      ctx.quadraticCurveTo(cx + 16, 28, cx + 8, 14 + bob);
+      ctx.quadraticCurveTo(cx, 6 + bob, cx - 8, 14 + bob);
+      ctx.closePath();
+      ctx.fill();
+
+      // Hood interior shadow
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+      ctx.beginPath();
+      ctx.moveTo(cx - 6, 16 + bob);
+      ctx.quadraticCurveTo(cx, 12 + bob, cx + 6, 16 + bob);
+      ctx.lineTo(cx + 7, 30 + bob);
+      ctx.quadraticCurveTo(cx, 33 + bob, cx - 7, 30 + bob);
+      ctx.closePath();
+      ctx.fill();
+
+      // Multiple eyes (glowing violet)
+      const eyeColors = ['#c0a0ff', '#a080ff', '#ffe0ff'];
+      const eyes = [
+        [cx - 4, 21 + bob], [cx + 4, 21 + bob],
+        [cx - 2, 26 + bob], [cx + 2, 26 + bob],
+      ];
+      for (let e = 0; e < eyes.length; e++) {
+        const [ex, ey] = eyes[e];
+        const eg = ctx.createRadialGradient(ex, ey, 0.5, ex, ey, 4);
+        eg.addColorStop(0, eyeColors[e % eyeColors.length]);
+        eg.addColorStop(1, 'rgba(80, 30, 180, 0)');
+        ctx.fillStyle = eg;
+        ctx.fillRect(ex - 4, ey - 4, 8, 8);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(ex, ey, 1, 1);
+      }
+
+      // Crown of thorns
+      ctx.strokeStyle = '#8060c0';
+      ctx.lineWidth = 1;
+      for (let h = 0; h < 5; h++) {
+        const hx = cx - 8 + h * 4;
+        ctx.beginPath();
+        ctx.moveTo(hx, 14 + bob);
+        ctx.lineTo(hx + 1, 8 + bob);
+        ctx.stroke();
+      }
+
+      if (i === 1) {
+        ctx.fillStyle = 'rgba(200, 160, 255, 0.18)';
+        ctx.fillRect(ox, 0, fw, fh);
+      }
+    }
+
+    SpriteFactory._addSheet(scene, 'paraplex', canvas, fw, fh);
+  }
+
+  static _shadowBolt(scene) {
+    const { canvas, ctx } = SpriteFactory._canvas(16, 16);
+    const halo = ctx.createRadialGradient(8, 8, 1, 8, 8, 8);
+    halo.addColorStop(0, '#e0c0ff');
+    halo.addColorStop(0.4, '#6040c0');
+    halo.addColorStop(1, 'rgba(20, 0, 60, 0)');
+    ctx.fillStyle = halo;
+    ctx.fillRect(0, 0, 16, 16);
+    // Dark core
+    ctx.fillStyle = '#200050';
+    SpriteFactory._circle(ctx, 8, 8, 3);
+    // Inner spark
+    ctx.fillStyle = '#c0a0ff';
+    SpriteFactory._circle(ctx, 8, 8, 1.5);
+    ctx.fillStyle = '#ffffff';
+    SpriteFactory._circle(ctx, 7, 7, 0.8);
+    SpriteFactory._addImage(scene, 'shadow_bolt', canvas);
+  }
+
+  // ── Hekate — the Triple-Faced (Archon III, Illusion) ──────────────────────
+
+  static _hekateBoss(scene) {
+    const fw = 56, fh = 56, frames = 2;
+    const { canvas, ctx } = SpriteFactory._canvas(fw * frames, fh);
+
+    for (let i = 0; i < frames; i++) {
+      const ox = i * fw;
+      const cx = ox + fw / 2;
+      const bob = i === 0 ? 0 : -1;
+
+      // Mirror halo (cyan)
+      const halo = ctx.createRadialGradient(cx, 26 + bob, 4, cx, 26 + bob, 28);
+      halo.addColorStop(0, 'rgba(160, 240, 255, 0.55)');
+      halo.addColorStop(0.5, 'rgba(60, 160, 220, 0.3)');
+      halo.addColorStop(1, 'rgba(0, 40, 80, 0)');
+      ctx.fillStyle = halo;
+      ctx.fillRect(ox, 0, fw, fh);
+
+      // Triple silhouette: side faces fainter
+      const drawHead = (offsetX, alpha, scale) => {
+        ctx.globalAlpha = alpha;
+        const headG = ctx.createLinearGradient(0, 10 + bob, 0, 30 + bob);
+        headG.addColorStop(0, '#e0f8ff');
+        headG.addColorStop(1, '#4080a0');
+        ctx.fillStyle = headG;
+        SpriteFactory._circle(ctx, cx + offsetX, 18 + bob, 7 * scale);
+        // Eyes
+        ctx.fillStyle = '#001020';
+        ctx.fillRect(cx + offsetX - 3, 17 + bob, 1, 2);
+        ctx.fillRect(cx + offsetX + 2, 17 + bob, 1, 2);
+        ctx.fillStyle = '#80ffff';
+        ctx.fillRect(cx + offsetX - 3, 17 + bob, 1, 1);
+        ctx.fillRect(cx + offsetX + 2, 17 + bob, 1, 1);
+        ctx.globalAlpha = 1;
+      };
+      drawHead(-9, 0.5, 0.9);
+      drawHead(9, 0.5, 0.9);
+
+      // Robed body
+      const robeG = ctx.createLinearGradient(0, 22 + bob, 0, 50);
+      robeG.addColorStop(0, '#80c0e0');
+      robeG.addColorStop(0.5, '#4080b0');
+      robeG.addColorStop(1, '#101a40');
+      ctx.fillStyle = robeG;
+      ctx.beginPath();
+      ctx.moveTo(cx - 10, 22 + bob);
+      ctx.lineTo(cx + 10, 22 + bob);
+      ctx.lineTo(cx + 16, 50);
+      ctx.lineTo(cx - 16, 50);
+      ctx.closePath();
+      ctx.fill();
+
+      // Mirror disc on chest
+      const disc = ctx.createRadialGradient(cx, 32 + bob, 1, cx, 32 + bob, 6);
+      disc.addColorStop(0, '#ffffff');
+      disc.addColorStop(0.6, '#80ffff');
+      disc.addColorStop(1, 'rgba(40, 120, 180, 0)');
+      ctx.fillStyle = disc;
+      ctx.fillRect(cx - 6, 26 + bob, 12, 12);
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(cx, 32 + bob, 5, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Center face (the "real" face)
+      drawHead(0, 1, 1);
+
+      // Triple crown points
+      ctx.fillStyle = '#80ffff';
+      SpriteFactory._triangle(ctx, cx - 4, 11 + bob, cx, 5 + bob, cx + 4, 11 + bob);
+      ctx.fillStyle = '#a0e0ff';
+      SpriteFactory._triangle(ctx, cx - 8, 13 + bob, cx - 6, 8 + bob, cx - 4, 13 + bob);
+      SpriteFactory._triangle(ctx, cx + 4, 13 + bob, cx + 6, 8 + bob, cx + 8, 13 + bob);
+
+      // Lower hem
+      ctx.fillStyle = '#08102a';
+      ctx.fillRect(cx - 16, 50, 32, 4);
+
+      if (i === 1) {
+        ctx.fillStyle = 'rgba(200, 240, 255, 0.18)';
+        ctx.fillRect(ox, 0, fw, fh);
+      }
+    }
+
+    SpriteFactory._addSheet(scene, 'hekate', canvas, fw, fh);
+  }
+
+  static _mirrorOrb(scene) {
+    const { canvas, ctx } = SpriteFactory._canvas(16, 16);
+    const halo = ctx.createRadialGradient(8, 8, 1, 8, 8, 8);
+    halo.addColorStop(0, '#ffffff');
+    halo.addColorStop(0.4, '#80ffff');
+    halo.addColorStop(1, 'rgba(40, 120, 180, 0)');
+    ctx.fillStyle = halo;
+    ctx.fillRect(0, 0, 16, 16);
+    ctx.fillStyle = '#a0ffff';
+    SpriteFactory._circle(ctx, 8, 8, 3);
+    // Mirror sheen
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(7, 7, 2, Math.PI * 0.2, Math.PI * 0.7);
+    ctx.stroke();
+    SpriteFactory._addImage(scene, 'mirror_orb', canvas);
+  }
+
+  // ── Ariouth — the Devourer (Archon IV, Earth) ──────────────────────────────
+
+  static _ariouthBoss(scene) {
+    const fw = 64, fh = 56, frames = 2;
+    const { canvas, ctx } = SpriteFactory._canvas(fw * frames, fh);
+
+    for (let i = 0; i < frames; i++) {
+      const ox = i * fw;
+      const cx = ox + fw / 2;
+      const bob = i === 0 ? 0 : 1;
+
+      // Earthen aura (dust glow)
+      const halo = ctx.createRadialGradient(cx, 36 + bob, 6, cx, 36 + bob, 32);
+      halo.addColorStop(0, 'rgba(200, 160, 80, 0.4)');
+      halo.addColorStop(0.6, 'rgba(120, 80, 30, 0.2)');
+      halo.addColorStop(1, 'rgba(40, 20, 0, 0)');
+      ctx.fillStyle = halo;
+      ctx.fillRect(ox, 0, fw, fh);
+
+      // Massive squat body
+      const bodyG = ctx.createLinearGradient(0, 22 + bob, 0, 54);
+      bodyG.addColorStop(0, '#806030');
+      bodyG.addColorStop(0.5, '#604020');
+      bodyG.addColorStop(1, '#201808');
+      ctx.fillStyle = bodyG;
+      ctx.beginPath();
+      ctx.moveTo(cx - 20, 22 + bob);
+      ctx.lineTo(cx + 20, 22 + bob);
+      ctx.lineTo(cx + 24, 54);
+      ctx.lineTo(cx - 24, 54);
+      ctx.closePath();
+      ctx.fill();
+
+      // Crusted shell pattern
+      ctx.fillStyle = '#a08040';
+      for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 5; c++) {
+          ctx.fillRect(cx - 18 + c * 8, 26 + r * 6 + bob, 3, 2);
+        }
+      }
+
+      // Maw — gaping toothed mouth
+      ctx.fillStyle = '#100408';
+      ctx.beginPath();
+      ctx.moveTo(cx - 14, 30 + bob);
+      ctx.quadraticCurveTo(cx, 48 + bob, cx + 14, 30 + bob);
+      ctx.lineTo(cx + 12, 32 + bob);
+      ctx.quadraticCurveTo(cx, 44 + bob, cx - 12, 32 + bob);
+      ctx.closePath();
+      ctx.fill();
+
+      // Inner maw glow (red)
+      const mawG = ctx.createRadialGradient(cx, 38 + bob, 1, cx, 38 + bob, 10);
+      mawG.addColorStop(0, '#ffa040');
+      mawG.addColorStop(0.6, '#a02010');
+      mawG.addColorStop(1, 'rgba(40, 0, 0, 0)');
+      ctx.fillStyle = mawG;
+      ctx.fillRect(cx - 12, 32 + bob, 24, 14);
+
+      // Teeth (top row + bottom row)
+      ctx.fillStyle = '#fff8d0';
+      for (let t = 0; t < 6; t++) {
+        const tx = cx - 12 + t * 5;
+        SpriteFactory._triangle(ctx, tx, 31 + bob, tx + 2, 31 + bob, tx + 1, 36 + bob);
+      }
+      for (let t = 0; t < 5; t++) {
+        const tx = cx - 10 + t * 5;
+        SpriteFactory._triangle(ctx, tx, 46 + bob, tx + 2, 46 + bob, tx + 1, 41 + bob);
+      }
+
+      // Two tiny eyes above the maw
+      const eg = ctx.createRadialGradient(cx, 22 + bob, 0.5, cx, 22 + bob, 6);
+      eg.addColorStop(0, '#ffe080');
+      eg.addColorStop(1, 'rgba(180, 30, 0, 0)');
+      ctx.fillStyle = eg;
+      ctx.fillRect(cx - 10, 18 + bob, 20, 8);
+      ctx.fillStyle = '#ffe040';
+      ctx.fillRect(cx - 6, 22 + bob, 2, 2);
+      ctx.fillRect(cx + 4, 22 + bob, 2, 2);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(cx - 6, 22 + bob, 1, 1);
+      ctx.fillRect(cx + 4, 22 + bob, 1, 1);
+
+      // Stone horns
+      ctx.fillStyle = '#604020';
+      SpriteFactory._triangle(ctx, cx - 22, 22 + bob, cx - 18, 12 + bob, cx - 14, 22 + bob);
+      SpriteFactory._triangle(ctx, cx + 14, 22 + bob, cx + 18, 12 + bob, cx + 22, 22 + bob);
+
+      // Heavy claws
+      ctx.fillStyle = '#1a1004';
+      for (let c = 0; c < 5; c++) {
+        SpriteFactory._triangle(ctx,
+          cx - 22 + c * 11, 54,
+          cx - 19 + c * 11, 56,
+          cx - 16 + c * 11, 54);
+      }
+
+      if (i === 1) {
+        ctx.fillStyle = 'rgba(255, 200, 100, 0.12)';
+        ctx.fillRect(ox, 0, fw, fh);
+      }
+    }
+
+    SpriteFactory._addSheet(scene, 'ariouth', canvas, fw, fh);
+  }
+
+  static _rockShard(scene) {
+    const { canvas, ctx } = SpriteFactory._canvas(16, 16);
+    // Outer dust glow
+    const halo = ctx.createRadialGradient(8, 8, 1, 8, 8, 8);
+    halo.addColorStop(0, 'rgba(200, 160, 80, 0.4)');
+    halo.addColorStop(1, 'rgba(40, 20, 0, 0)');
+    ctx.fillStyle = halo;
+    ctx.fillRect(0, 0, 16, 16);
+    // Jagged rock body
+    ctx.fillStyle = '#806030';
+    ctx.beginPath();
+    ctx.moveTo(3, 8);
+    ctx.lineTo(7, 2);
+    ctx.lineTo(13, 5);
+    ctx.lineTo(14, 11);
+    ctx.lineTo(9, 14);
+    ctx.lineTo(2, 12);
+    ctx.closePath();
+    ctx.fill();
+    // Highlight
+    ctx.fillStyle = '#a88440';
+    ctx.beginPath();
+    ctx.moveTo(5, 6);
+    ctx.lineTo(8, 4);
+    ctx.lineTo(9, 7);
+    ctx.lineTo(6, 8);
+    ctx.closePath();
+    ctx.fill();
+    // Shadow
+    ctx.fillStyle = '#402008';
+    ctx.fillRect(9, 11, 4, 2);
+    SpriteFactory._addImage(scene, 'rock_shard', canvas);
   }
 
   // ── Sophia — the Light-Maiden, angelic gold form ──────────────────────────

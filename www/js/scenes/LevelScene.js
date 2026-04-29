@@ -3,8 +3,16 @@ import Sophia from '../entities/Sophia.js';
 import Jesus from '../entities/Jesus.js';
 import ArchonScout from '../entities/ArchonScout.js';
 import Authades from '../entities/Authades.js';
+import Paraplex from '../entities/Paraplex.js';
+import Hekate from '../entities/Hekate.js';
+import Ariouth from '../entities/Ariouth.js';
 
-const BOSS_CLASSES = { authades: Authades };
+const BOSS_CLASSES = {
+  authades: Authades,
+  paraplex: Paraplex,
+  hekate: Hekate,
+  ariouth: Ariouth,
+};
 
 export default class LevelScene extends Phaser.Scene {
   constructor() { super({ key: 'Level' }); }

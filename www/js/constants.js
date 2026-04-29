@@ -1,6 +1,6 @@
 // ─── GAME CONSTANTS ───────────────────────────────────────────────────────────
 
-export const GAME_VERSION = '0.5.0';
+export const GAME_VERSION = '0.6.0';
 
 // Canvas base resolution (scaled up by Phaser)
 export const WIDTH  = 480;
@@ -80,6 +80,57 @@ export const BOSSES = {
       'His fire blazed in pride — but Sophia\'s\n' +
       'swift feet outpaced even his fury."',
   },
+  paraplex: {
+    archonId: 2,
+    name: 'Paraplex',
+    title: 'The Confuser',
+    element: 'Shadow',
+    texture: 'paraplex',
+    hp: 14,
+    phaseCount: 3,
+    bodyW: 30, bodyH: 38,
+    bodyOX: 13, bodyOY: 13,
+    deathTints: [0xffffff, 0x8060ff, 0x4020a0, 0x100040],
+    barColor: 0x6040c0,
+    lore:
+      '"Paraplex stirred the shadows, scattering thought.\n' +
+      'Yet through prayer the veil thinned — and his\n' +
+      'confusion broke against the Light."',
+  },
+  hekate: {
+    archonId: 3,
+    name: 'Hekate',
+    title: 'The Triple-Faced',
+    element: 'Illusion',
+    texture: 'hekate',
+    hp: 16,
+    phaseCount: 3,
+    bodyW: 30, bodyH: 40,
+    bodyOX: 13, bodyOY: 12,
+    deathTints: [0xffffff, 0x80ffff, 0x40a0c0, 0x103060],
+    barColor: 0x40c0e0,
+    lore:
+      '"Three faces had Hekate, three lies in one mouth.\n' +
+      'I knew her by the truth she could not bear:\n' +
+      'her own reflection, shattered by Wisdom."',
+  },
+  ariouth: {
+    archonId: 4,
+    name: 'Ariouth',
+    title: 'The Devourer',
+    element: 'Earth',
+    texture: 'ariouth',
+    hp: 18,
+    phaseCount: 3,
+    bodyW: 44, bodyH: 38,
+    bodyOX: 10, bodyOY: 18,
+    deathTints: [0xffffff, 0xa08040, 0x604020, 0x201808],
+    barColor: 0x806030,
+    lore:
+      '"Ariouth opened his maw — vast as the Below.\n' +
+      'But what he swallowed was only stone and dust.\n' +
+      'My light he could not chew, and so he fell."',
+  },
 };
 
 // ─── LEVELS ───────────────────────────────────────────────────────────────────
@@ -133,10 +184,137 @@ export const LEVELS = [
   },
   {
     id: 2,
+    act: 'Act I — The Fall',
+    name: 'Aeon II — Through the Veil of Paraplex',
+    subtitle: 'The Confuser stirs the dark between gates.',
+    lore: '"Paraplex unstrung my thought —\n what was Sophia, what was shadow, became one."',
+    worldWidth: 1700,
+    bgKey: 'bg_stars',
+    bgTint: 0x05001a,
+    decor: 'gates',
+    worldTint: 0xffffff,
+    worldAlpha: 1,
+    worldColor: '#9070ff',
+    worldColorHex: 0x9070ff,
+    platforms: [
+      [0,    254, 240],
+      [320,  254, 160],
+      [560,  220, 100],
+      [720,  180, 100],
+      [880,  220, 100],
+      [1040, 254, 200],
+      [1300, 254, 400],
+    ],
+    enemies: [
+      [380, 220, 'patrol'],
+      [620, 190, 'patrol'],
+      [820, 150, 'chase'],
+      [1100, 220, 'patrol'],
+    ],
+    sparks: [
+      [180, 220], [400, 220], [620, 190], [780, 150],
+      [920, 190], [1080, 220], [1240, 220],
+    ],
+    boss: {
+      id: 'paraplex',
+      spawnX: 1620, spawnY: 200,
+      triggerX: 1380,
+      arenaX: 1300, arenaWidth: 400,
+    },
+    exit: [1660, 222],
+  },
+  {
+    id: 3,
+    act: 'Act I — The Fall',
+    name: 'Aeon III — The Mirrors of Hekate',
+    subtitle: 'Three faces wait — only one is real.',
+    lore: '"Hekate stood thrice before me,\n laughing in voices that were almost mine."',
+    worldWidth: 1800,
+    bgKey: 'bg_stars',
+    bgTint: 0x040022,
+    decor: 'gates',
+    worldTint: 0xffffff,
+    worldAlpha: 1,
+    worldColor: '#80e8ff',
+    worldColorHex: 0x80e8ff,
+    platforms: [
+      [0,    254, 220],
+      [280,  220, 100],
+      [440,  180, 100],
+      [600,  140, 100],
+      [760,  180, 100],
+      [920,  220, 100],
+      [1080, 254, 180],
+      [1320, 254, 480],
+    ],
+    enemies: [
+      [320, 190, 'patrol'],
+      [500, 150, 'chase'],
+      [780, 150, 'patrol'],
+      [980, 190, 'chase'],
+      [1140, 220, 'patrol'],
+    ],
+    sparks: [
+      [180, 220], [320, 190], [480, 150], [640, 110],
+      [800, 150], [960, 190], [1120, 220], [1260, 220],
+    ],
+    boss: {
+      id: 'hekate',
+      spawnX: 1620, spawnY: 200,
+      triggerX: 1400,
+      arenaX: 1320, arenaWidth: 480,
+    },
+    exit: [1760, 222],
+  },
+  {
+    id: 4,
+    act: 'Act I — The Fall',
+    name: 'Aeon IV — The Maw of Ariouth',
+    subtitle: 'The Devourer waits where the path narrows.',
+    lore: '"The Devourer rose, hungering for my Light.\n His teeth were the gates I yet had to pass."',
+    worldWidth: 1900,
+    bgKey: 'bg_stars',
+    bgTint: 0x0a0410,
+    decor: 'gates',
+    worldTint: 0xffffff,
+    worldAlpha: 1,
+    worldColor: '#c8a060',
+    worldColorHex: 0xc8a060,
+    platforms: [
+      [0,    254, 280],
+      [340,  254, 160],
+      [560,  220, 100],
+      [720,  180, 100],
+      [880,  140, 100],
+      [1040, 180, 100],
+      [1200, 254, 220],
+      [1480, 254, 420],
+    ],
+    enemies: [
+      [400, 220, 'patrol'],
+      [620, 190, 'chase'],
+      [780, 150, 'patrol'],
+      [940, 110, 'chase'],
+      [1280, 220, 'patrol'],
+    ],
+    sparks: [
+      [180, 220], [380, 220], [600, 190], [760, 150],
+      [920, 110], [1080, 150], [1240, 220], [1420, 220],
+    ],
+    boss: {
+      id: 'ariouth',
+      spawnX: 1780, spawnY: 200,
+      triggerX: 1560,
+      arenaX: 1480, arenaWidth: 420,
+    },
+    exit: [1860, 222],
+  },
+  {
+    id: 5,
     act: 'Act II — The Chaos',
-    name: 'Aeon VI — The Storm of Paraplex',
+    name: 'Aeon VI — The Storm of Sabaoth',
     subtitle: 'Trapped in the abyss. Hunted by shadow Archons.',
-    lore: '"I cried out of the darkness. There was no consort here —\n only Paraplex, and the claws of the Hunt."',
+    lore: '"I cried out of the darkness. There was no consort here —\n only Sabaoth, and the claws of the Hunt."',
     worldWidth: 2000,
     bgKey: 'bg_chaos',
     bgTint: 0x0a001e,
@@ -171,7 +349,7 @@ export const LEVELS = [
     exit: [1940, 222],
   },
   {
-    id: 3,
+    id: 6,
     act: 'Act III — The Ascent',
     name: 'Aeon XIII — The Veil Parts',
     subtitle: 'Guided by the Light. Rising through the restored gates.',
