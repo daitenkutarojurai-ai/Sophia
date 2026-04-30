@@ -33,6 +33,8 @@ export default class SpriteFactory {
     SpriteFactory._mirrorOrb(scene);
     SpriteFactory._ariouthBoss(scene);
     SpriteFactory._rockShard(scene);
+    SpriteFactory._sabaothBoss(scene);
+    SpriteFactory._lightningBolt(scene);
     SpriteFactory._crown(scene);
   }
 
@@ -515,6 +517,143 @@ export default class SpriteFactory {
     ctx.fillStyle = '#402008';
     ctx.fillRect(9, 11, 4, 2);
     SpriteFactory._addImage(scene, 'rock_shard', canvas);
+  }
+
+  // ── Sabaoth — the Lord of Forces (Archon VI, Storm) ───────────────────────
+
+  static _sabaothBoss(scene) {
+    const fw = 60, fh = 60, frames = 2;
+    const { canvas, ctx } = SpriteFactory._canvas(fw * frames, fh);
+
+    for (let i = 0; i < frames; i++) {
+      const ox = i * fw;
+      const cx = ox + fw / 2;
+      const bob = i === 0 ? 0 : -2;
+
+      // Outer storm halo
+      const halo = ctx.createRadialGradient(cx, 30 + bob, 6, cx, 30 + bob, 32);
+      halo.addColorStop(0, 'rgba(160, 224, 255, 0.55)');
+      halo.addColorStop(0.5, 'rgba(80, 140, 220, 0.3)');
+      halo.addColorStop(1, 'rgba(8, 16, 48, 0)');
+      ctx.fillStyle = halo;
+      ctx.fillRect(ox, 0, fw, fh);
+
+      // Storm clouds beneath the body
+      ctx.fillStyle = 'rgba(50, 70, 120, 0.7)';
+      for (let s = 0; s < 5; s++) {
+        const a = (s / 5) * Math.PI * 2 + (i ? 0.18 : 0);
+        SpriteFactory._circle(ctx,
+          cx + Math.cos(a) * 18,
+          44 + bob + Math.sin(a) * 4,
+          5 + (s % 2));
+      }
+
+      // Cloak — slate-blue with storm gradient
+      const robeG = ctx.createLinearGradient(0, 14 + bob, 0, 50);
+      robeG.addColorStop(0, '#3060a0');
+      robeG.addColorStop(0.5, '#1a3060');
+      robeG.addColorStop(1, '#08102a');
+      ctx.fillStyle = robeG;
+      ctx.beginPath();
+      ctx.moveTo(cx - 14, 14 + bob);
+      ctx.lineTo(cx + 14, 14 + bob);
+      ctx.lineTo(cx + 22, 50);
+      ctx.lineTo(cx - 22, 50);
+      ctx.closePath();
+      ctx.fill();
+
+      // Crackling robe lightning streaks
+      ctx.strokeStyle = '#a0e0ff';
+      ctx.lineWidth = 1;
+      for (let s = 0; s < 3; s++) {
+        const sx = cx - 10 + s * 10;
+        ctx.beginPath();
+        ctx.moveTo(sx, 22 + bob);
+        ctx.lineTo(sx + 1, 30 + bob);
+        ctx.lineTo(sx - 1, 36 + bob);
+        ctx.lineTo(sx + 1, 44 + bob);
+        ctx.stroke();
+      }
+
+      // Helmed head — dark with gleaming visor
+      ctx.fillStyle = '#1a2848';
+      SpriteFactory._circle(ctx, cx, 18 + bob, 8);
+      // Visor slit
+      ctx.fillStyle = '#a0e0ff';
+      ctx.fillRect(cx - 6, 17 + bob, 12, 2);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(cx - 5, 17 + bob, 2, 1);
+      ctx.fillRect(cx + 3, 17 + bob, 2, 1);
+
+      // Crown of jagged lightning (3 spikes)
+      ctx.fillStyle = '#a0e0ff';
+      SpriteFactory._triangle(ctx, cx - 8, 12 + bob, cx - 5, 4 + bob, cx - 3, 12 + bob);
+      SpriteFactory._triangle(ctx, cx - 2, 11 + bob, cx,     2 + bob, cx + 2, 11 + bob);
+      SpriteFactory._triangle(ctx, cx + 3, 12 + bob, cx + 5, 4 + bob, cx + 8, 12 + bob);
+      ctx.fillStyle = '#ffffff';
+      SpriteFactory._triangle(ctx, cx - 1, 8 + bob, cx, 3 + bob, cx + 1, 8 + bob);
+
+      // Outstretched cloak edges (pauldrons) crackling with light
+      ctx.fillStyle = '#4070b0';
+      SpriteFactory._triangle(ctx, cx - 22, 22 + bob, cx - 14, 18 + bob, cx - 14, 28 + bob);
+      SpriteFactory._triangle(ctx, cx + 14, 18 + bob, cx + 22, 22 + bob, cx + 14, 28 + bob);
+
+      // Chest sigil — a jagged bolt
+      ctx.fillStyle = '#ffe080';
+      ctx.beginPath();
+      ctx.moveTo(cx - 2, 26 + bob);
+      ctx.lineTo(cx + 3, 26 + bob);
+      ctx.lineTo(cx, 32 + bob);
+      ctx.lineTo(cx + 3, 32 + bob);
+      ctx.lineTo(cx - 3, 40 + bob);
+      ctx.lineTo(cx, 33 + bob);
+      ctx.lineTo(cx - 3, 33 + bob);
+      ctx.closePath();
+      ctx.fill();
+
+      if (i === 1) {
+        // Frame 2 — added flash
+        ctx.fillStyle = 'rgba(160, 224, 255, 0.18)';
+        ctx.fillRect(ox, 0, fw, fh);
+      }
+    }
+
+    SpriteFactory._addSheet(scene, 'sabaoth', canvas, fw, fh);
+  }
+
+  static _lightningBolt(scene) {
+    const { canvas, ctx } = SpriteFactory._canvas(16, 16);
+    // Outer charge halo
+    const halo = ctx.createRadialGradient(8, 8, 1, 8, 8, 8);
+    halo.addColorStop(0, '#ffffff');
+    halo.addColorStop(0.4, '#a0e0ff');
+    halo.addColorStop(1, 'rgba(20, 40, 100, 0)');
+    ctx.fillStyle = halo;
+    ctx.fillRect(0, 0, 16, 16);
+    // Jagged bolt body
+    ctx.fillStyle = '#a0e0ff';
+    ctx.beginPath();
+    ctx.moveTo(7, 2);
+    ctx.lineTo(10, 6);
+    ctx.lineTo(8, 7);
+    ctx.lineTo(11, 14);
+    ctx.lineTo(7, 9);
+    ctx.lineTo(9, 8);
+    ctx.lineTo(5, 2);
+    ctx.closePath();
+    ctx.fill();
+    // White hot core
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.moveTo(7, 4);
+    ctx.lineTo(8, 6);
+    ctx.lineTo(7, 7);
+    ctx.lineTo(8, 11);
+    ctx.lineTo(6, 8);
+    ctx.lineTo(7, 5);
+    ctx.closePath();
+    ctx.fill();
+    SpriteFactory._addImage(scene, 'lightning_bolt', canvas);
   }
 
   // ── Sophia — the Light-Maiden, angelic gold form ──────────────────────────

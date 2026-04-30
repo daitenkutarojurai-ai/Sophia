@@ -1,6 +1,6 @@
 // ─── GAME CONSTANTS ───────────────────────────────────────────────────────────
 
-export const GAME_VERSION = '0.6.0';
+export const GAME_VERSION = '0.7.0';
 
 // Canvas base resolution (scaled up by Phaser)
 export const WIDTH  = 480;
@@ -130,6 +130,23 @@ export const BOSSES = {
       '"Ariouth opened his maw — vast as the Below.\n' +
       'But what he swallowed was only stone and dust.\n' +
       'My light he could not chew, and so he fell."',
+  },
+  sabaoth: {
+    archonId: 6,
+    name: 'Sabaoth',
+    title: 'Lord of Forces',
+    element: 'Storm',
+    texture: 'sabaoth',
+    hp: 22,
+    phaseCount: 3,
+    bodyW: 36, bodyH: 44,
+    bodyOX: 14, bodyOY: 10,
+    deathTints: [0xffffff, 0xa0e0ff, 0x4080c0, 0x081030],
+    barColor: 0x60a0ff,
+    lore:
+      '"Sabaoth roared in storm and thunder,\n' +
+      'his lightning chasing me through Chaos.\n' +
+      'Yet the Light I bore could not be drowned."',
   },
 };
 
@@ -313,9 +330,9 @@ export const LEVELS = [
     id: 5,
     act: 'Act II — The Chaos',
     name: 'Aeon VI — The Storm of Sabaoth',
-    subtitle: 'Trapped in the abyss. Hunted by shadow Archons.',
-    lore: '"I cried out of the darkness. There was no consort here —\n only Sabaoth, and the claws of the Hunt."',
-    worldWidth: 2000,
+    subtitle: 'The Lord of Forces rules the storm-wracked abyss.',
+    lore: '"I cried out of the darkness. There was no consort here —\n only Sabaoth, and the thunder of his Hunt."',
+    worldWidth: 2200,
     bgKey: 'bg_chaos',
     bgTint: 0x0a001e,
     decor: 'shadows',
@@ -332,21 +349,26 @@ export const LEVELS = [
       [1360, 220, 80],
       [1480, 180, 80],
       [1600, 140, 80],
-      [1720, 254, 300],
+      [1720, 254, 480],
     ],
     enemies: [
       [320, 220, 'patrol'],
       [520, 220, 'chase'],
       [900, 130, 'patrol'],
       [1180, 220, 'chase'],
-      [1780, 220, 'patrol'],
     ],
     sparks: [
       [150, 220], [360, 210], [560, 210], [710, 170],
       [870, 130], [1030, 170], [1220, 220],
-      [1400, 190], [1520, 150], [1640, 110], [1880, 220],
+      [1400, 190], [1520, 150], [1640, 110], [1860, 220],
     ],
-    exit: [1940, 222],
+    boss: {
+      id: 'sabaoth',
+      spawnX: 1980, spawnY: 170,
+      triggerX: 1780,
+      arenaX: 1720, arenaWidth: 480,
+    },
+    exit: [2160, 222],
   },
   {
     id: 6,

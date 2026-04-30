@@ -213,6 +213,17 @@ sophia-game/
 
 ## 8. TO DO
 
+### ✅ Done (v0.7.0 — Act II Boss: Sabaoth)
+- [x] **Sabaoth boss fight** — `entities/Sabaoth.js`, Archon VI "Lord of Forces", Storm. 3 phases:
+  - Phase 0 — single aimed lightning bolt fired at the player.
+  - Phase 1 — alternates a 3-bolt fan and a "strike from above" — Sabaoth fades, teleports above the player's column, telegraphs with a glowing blue rune, then drops a vertical bolt straight down.
+  - Phase 2 — adds a horizontal **gale** shockwave (low-flying lightning gust that sweeps across the floor of the arena) and a 5-bolt fan; cycles fan → strike → gale.
+  - Hovering boss (no gravity) with a constant blue/white storm aura and vertical sine bob. Uses the same hit-stun + phase-change conventions as the Act I bosses.
+- [x] **`BOSSES.sabaoth` config added** — hp 22, phaseCount 3, slate-blue death tints, blue HP bar, 3-line lore quotation.
+- [x] **Act II level (Aeon VI — The Storm of Sabaoth) wired with the boss** — worldWidth bumped to 2200, ground floor extended to span the boss arena, `level.boss = { id:'sabaoth', spawnX:1980, spawnY:170, triggerX:1780, arenaX:1720, arenaWidth:480 }`, exit moved to 2160, scout count tightened so the path-to-arena flow matches the Act I bosses.
+- [x] **`BOSS_CLASSES.sabaoth = Sabaoth`** — registered in `LevelScene` alongside the other Archons; the existing trigger / arena-wall / sealed-exit / boss-lore-panel pipeline drives the fight automatically.
+- [x] **Sabaoth + lightning_bolt sprites** — `SpriteFactory._sabaothBoss` (60×60 helmed storm-king with cloud base, slate cloak, lightning crown, glowing visor, chest bolt sigil) and `SpriteFactory._lightningBolt` (16×16 jagged bolt with white-hot core).
+
 ### ✅ Done (v0.6.0 — Act I Boss Gauntlet)
 - [x] **Paraplex boss fight** — `entities/Paraplex.js`, Archon II "The Confuser", Shadow. 3 phases:
   - Phase 0 — single shadow bolt aimed at the player.
@@ -270,7 +281,7 @@ sophia-game/
   - Stealth sections (avoid Archon patrols)
   - 13 repentance prayers = collectible lore items
   - Jesus appears at end of Act 2 (hearing her cries)
-- [ ] **More Archon bosses (Acts II–III)** — extend ArchonBoss for Sabaoth (#6 Storm), Adonaios (#7 Void), Astaphaios (#8 Acid) for Act II; Ailoaios (#9 Mirror), Oraios (#10 Corrupt Light), Adamas (#11 Stone), Sabaoth-Repentant (#12), and The Veil (#13) for Act III / Finale. Use the `BOSSES` / `BOSS_CLASSES` registry pattern.
+- [ ] **More Archon bosses (Acts II–III)** — extend ArchonBoss for Adonaios (#7 Void) and Astaphaios (#8 Acid) for Act II; Ailoaios (#9 Mirror), Oraios (#10 Corrupt Light), Adamas (#11 Stone), Sabaoth-Repentant (#12), and The Veil (#13) for Act III / Finale. Use the `BOSSES` / `BOSS_CLASSES` registry pattern. (Sabaoth #6 done in v0.7.0.)
 
 ### 🟡 Medium Priority
 - [ ] **Act3Scene** — The Ascent
