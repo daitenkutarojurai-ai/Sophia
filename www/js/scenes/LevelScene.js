@@ -6,12 +6,14 @@ import Authades from '../entities/Authades.js';
 import Paraplex from '../entities/Paraplex.js';
 import Hekate from '../entities/Hekate.js';
 import Ariouth from '../entities/Ariouth.js';
+import Sabaoth from '../entities/Sabaoth.js';
 
 const BOSS_CLASSES = {
   authades: Authades,
   paraplex: Paraplex,
   hekate: Hekate,
   ariouth: Ariouth,
+  sabaoth: Sabaoth,
 };
 
 export default class LevelScene extends Phaser.Scene {
