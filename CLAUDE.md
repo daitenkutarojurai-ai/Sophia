@@ -213,6 +213,18 @@ sophia-game/
 
 ## 8. TO DO
 
+### ✅ Done (v0.8.0 — Polish, Dash, Shooter Scouts, Rank)
+- [x] **Bug fix: Boss HP bar color** — `UIScene._onBossActivated` now applies the boss's `barColor` (Sabaoth shows blue, Hekate cyan, etc.) instead of always red.
+- [x] **Bug fix: Spark particle emitter cleanup** — Particle emitters attached to collectible orbs are now destroyed when the spark is collected, eliminating lingering floating FX.
+- [x] **Dash mechanic (Sophia, X key)** — `Sophia._startDash()` / `_endDash()`: 180ms forward burst at 3.2× speed, full invincibility during dash, 750ms cooldown. Spawns 3 golden afterimage echoes + forward burst particles. Control hint in HUD updated.
+- [x] **Shooter scout variant** — `ArchonScout` `behavior:'shooter'`: fires `shadow_bolt` projectiles at the player when within 220px. Backs away if too close. Staggered initial cooldowns prevent simultaneous volleys. Introduced in Aeon IV, VI, and XIII.
+- [x] **Level timer in HUD** — `UIScene.update()` reads `levelTimer` from LevelScene and renders `MM:SS` in the top-right, updating once per second.
+- [x] **Level rank panel (S/A/B/C)** — On level complete, `LevelScene._showRankPanel()` shows a stat overlay (level name, time, sparks, no-damage bonus, rank letter) for 2.4s before fading in. Rank: time 40% + sparks 30% + no-hit 20% + completion 10%.
+- [x] **Low-HP heart pulse** — `UIScene._updateHp()` adds a pulsing tween on the last heart when HP = 1.
+- [x] **Improved platform texture** — Block-seam stone look with luminous crystal top strip, glyph dots, bottom void edge.
+- [x] **Divine-spark orb collectible** — Gold-cross light burst with cardinal rays, diagonal glints, diamond core.
+- [x] **Enhanced portal graphic** — Stone arch with apex gem, richer inner beam gradient, symmetric sacred rune marks.
+
 ### ✅ Done (v0.7.0 — Act II Boss: Sabaoth)
 - [x] **Sabaoth boss fight** — `entities/Sabaoth.js`, Archon VI "Lord of Forces", Storm. 3 phases:
   - Phase 0 — single aimed lightning bolt fired at the player.

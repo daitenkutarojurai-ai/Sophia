@@ -1,6 +1,6 @@
 // ─── GAME CONSTANTS ───────────────────────────────────────────────────────────
 
-export const GAME_VERSION = '0.7.0';
+export const GAME_VERSION = '0.8.0';
 
 // Canvas base resolution (scaled up by Phaser)
 export const WIDTH  = 480;
@@ -309,7 +309,7 @@ export const LEVELS = [
     ],
     enemies: [
       [400, 220, 'patrol'],
-      [620, 190, 'chase'],
+      [620, 190, 'shooter'],
       [780, 150, 'patrol'],
       [940, 110, 'chase'],
       [1280, 220, 'patrol'],
@@ -353,9 +353,9 @@ export const LEVELS = [
     ],
     enemies: [
       [320, 220, 'patrol'],
-      [520, 220, 'chase'],
+      [520, 220, 'shooter'],
       [900, 130, 'patrol'],
-      [1180, 220, 'chase'],
+      [1180, 220, 'shooter'],
     ],
     sparks: [
       [150, 220], [360, 210], [560, 210], [710, 170],
@@ -400,10 +400,10 @@ export const LEVELS = [
     ],
     enemies: [
       [300, 180, 'patrol'],
-      [580, 100, 'patrol'],
+      [580, 100, 'shooter'],
       [990, 220, 'chase'],
       [1180, 180, 'patrol'],
-      [1460, 100, 'patrol'],
+      [1460, 100, 'shooter'],
       [1720, 100, 'chase'],
       [2020, 220, 'chase'],
     ],

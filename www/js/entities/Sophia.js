@@ -18,6 +18,13 @@ export default class Sophia extends Phaser.Physics.Arcade.Sprite {
     this.isAttacking = false;
     this.attackCooldown = 0;
 
+    // Dash state
+    this._dashKey = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
+    this._dashCooldown = 0;
+    this._isDashing = false;
+    this._dashTime = 0;
+    this._invincible = false;
+
     Sophia._defineAnims(scene);
     this.play('sophia_idle');
 
@@ -48,15 +55,32 @@ export default class Sophia extends Phaser.Physics.Arcade.Sprite {
     const { cursors, actionKey } = this.scene;
     const onGround = this.body.blocked.down || this.body.touching.down;
 
-    // Horizontal movement
-    if (cursors.left.isDown) {
-      this.setVelocityX(-DATA.speed);
-      this.setFlipX(true);
-    } else if (cursors.right.isDown) {
-      this.setVelocityX(DATA.speed);
-      this.setFlipX(false);
-    } else {
-      this.setVelocityX(0);
+    // Dash cooldown tick
+    if (this._dashCooldown > 0) this._dashCooldown -= delta;
+
+    // Dash duration tick
+    if (this._isDashing) {
+      this._dashTime -= delta;
+      if (this._dashTime <= 0) this._endDash();
+    }
+
+    // Dash input (X) — only when not already dashing or hurt
+    if (Phaser.Input.Keyboard.JustDown(this._dashKey) &&
+        this._dashCooldown <= 0 && !this._isDashing) {
+      this._startDash();
+    }
+
+    if (!this._isDashing) {
+      // Horizontal movement
+      if (cursors.left.isDown) {
+        this.setVelocityX(-DATA.speed);
+        this.setFlipX(true);
+      } else if (cursors.right.isDown) {
+        this.setVelocityX(DATA.speed);
+        this.setFlipX(false);
+      } else {
+        this.setVelocityX(0);
+      }
     }
 
     // Jump
@@ -65,12 +89,15 @@ export default class Sophia extends Phaser.Physics.Arcade.Sprite {
     }
 
     // Attack (Z)
-    if (Phaser.Input.Keyboard.JustDown(actionKey) && this.attackCooldown <= 0) {
+    if (Phaser.Input.Keyboard.JustDown(actionKey) && this.attackCooldown <= 0 && !this._isDashing) {
       this._attack();
     }
 
     // Animation
-    if (this.isAttacking) {
+    if (this._isDashing) {
+      this.anims.stop();
+      this.setFrame(3);
+    } else if (this.isAttacking) {
       // hold attack frame
     } else if (!onGround) {
       this.anims.stop();
@@ -91,8 +118,59 @@ export default class Sophia extends Phaser.Physics.Arcade.Sprite {
     }
   }
 
+  _startDash() {
+    const dir = this.flipX ? -1 : 1;
+    this._isDashing = true;
+    this._invincible = true;
+    this._dashTime = 180;
+    this._dashCooldown = 750;
+    this.setVelocityX(dir * DATA.speed * 3.2);
+    this.setTint(0xfff0b0);
+
+    // Afterimage echoes every 50ms
+    this.scene.time.addEvent({
+      delay: 50, repeat: 3,
+      callback: () => {
+        if (!this.scene) return;
+        const echo = this.scene.add.sprite(this.x, this.y, DATA.texture, this.frame.name)
+          .setFlipX(this.flipX)
+          .setAlpha(0.42)
+          .setTint(0xffc040)
+          .setBlendMode('ADD')
+          .setDepth(this.depth - 1);
+        this.scene.tweens.add({
+          targets: echo, alpha: 0, scaleX: 0.9,
+          duration: 240, onComplete: () => echo.destroy(),
+        });
+      },
+    });
+
+    // Forward burst particles
+    const burst = this.scene.add.particles(this.x, this.y, 'spark', {
+      scale: { start: 0.5, end: 0 },
+      alpha: { start: 0.9, end: 0 },
+      speed: { min: 40, max: 90 },
+      angle: this.flipX ? { min: 150, max: 210 } : { min: -30, max: 30 },
+      tint: [0xffffff, 0xffe080, 0xffc040],
+      lifespan: 320, quantity: 8, emitting: false,
+      blendMode: 'ADD',
+    });
+    burst.explode(8);
+    this.scene.time.delayedCall(400, () => burst.destroy());
+  }
+
+  _endDash() {
+    this._isDashing = false;
+    this._invincible = false;
+    this.clearTint();
+    if (this.body && !this.body.blocked.down) {
+      // Preserve only vertical momentum after dash
+      this.setVelocityX(0);
+    }
+  }
+
   takeDamage(amount = 1) {
-    if (this.isHurt) return;
+    if (this.isHurt || this._invincible) return;
     this.hp = Math.max(0, this.hp - amount);
     this.isHurt = true;
     this.setTint(0xff4060);
