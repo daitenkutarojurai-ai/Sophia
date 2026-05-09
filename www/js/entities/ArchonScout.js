@@ -21,6 +21,8 @@ export default class ArchonScout extends Phaser.Physics.Arcade.Sprite {
     this.touchDamage = 1;
     this.isDead = false;
     this._isChasing = false;
+    // Shooter: stagger initial cooldowns so squads don't fire in sync
+    this._shootCooldown = 1800 + Math.random() * 1200;
 
     ArchonScout._defineAnims(scene);
     this.play('scout_walk');
@@ -32,8 +34,6 @@ export default class ArchonScout extends Phaser.Physics.Arcade.Sprite {
   update(time, delta) {
     if (this.isDead) return;
 
-    if (this.y > 400) { this._die(); return; }
-
     const player = this.scene.player;
     if (!player) return;
 
@@ -42,31 +42,67 @@ export default class ArchonScout extends Phaser.Physics.Arcade.Sprite {
 
     if (nowChasing !== this._isChasing) {
       this._isChasing = nowChasing;
-      // Glow red when switching to chase; clear when returning to patrol
       if (!this.isDead) {
         nowChasing ? this.setTint(0xff7040) : this.clearTint();
       }
     }
 
-    if (nowChasing) {
+    if (this.behavior === 'shooter') {
+      // Shooter: stand and fire; back away if too close
+      this._shootCooldown -= delta;
+      if (dist < 60) {
+        const awayDir = this.x < player.x ? -1 : 1;
+        this.setVelocityX(awayDir * this.patrolSpeed);
+      } else {
+        this.setVelocityX(0);
+      }
+      if (dist < 220 && this._shootCooldown <= 0) {
+        this._fire(player);
+        this._shootCooldown = 2000;
+      }
+      this.setFlipX(player.x < this.x);
+    } else if (nowChasing) {
       this.setVelocityX((player.x < this.x ? -1 : 1) * this.chaseSpeed);
+      this.setFlipX(this.body.velocity.x < 0);
     } else {
       this.setVelocityX(this.patrolSpeed * this.direction);
       if (this.x > this.startX + this.patrolRange) this.direction = -1;
       if (this.x < this.startX - this.patrolRange) this.direction = 1;
       if (this.body.blocked.left)  this.direction = 1;
       if (this.body.blocked.right) this.direction = -1;
-    }
 
-    if (this.body.blocked.down && !nowChasing) {
-      if (!this._hasGroundAhead(this.body.velocity.x > 0 ? 1 : -1)) {
-        this.direction *= -1;
-        this.setVelocityX(this.patrolSpeed * this.direction);
+      if (this.body.velocity.x !== 0 && this.body.blocked.down) {
+        if (!this._hasGroundAhead(this.body.velocity.x > 0 ? 1 : -1)) {
+          this.direction *= -1;
+          this.setVelocityX(this.patrolSpeed * this.direction);
+        }
       }
+      this.setFlipX(this.body.velocity.x < 0);
     }
 
-    this.setFlipX(this.body.velocity.x < 0);
     this._drawHpBar();
+  }
+
+  _fire(player) {
+    const dx = player.x - this.x;
+    const dy = (player.y - 8) - this.y;
+    const angle = Math.atan2(dy, dx);
+    const speed = 140;
+
+    const bolt = this.scene.physics.add.image(this.x, this.y - 4, 'shadow_bolt');
+    bolt.body.setAllowGravity(false);
+    bolt.body.setSize(8, 8);
+    bolt.setRotation(angle);
+    bolt.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed);
+    bolt.touchDamage = 1;
+    bolt.lifespan = 2000;
+    this.scene.enemyProjectiles.add(bolt);
+
+    // Brief muzzle flash tint
+    this.setTint(0xc080ff);
+    this.scene.time.delayedCall(160, () => {
+      if (!this.isDead) this.clearTint();
+    });
   }
 
   _drawHpBar() {

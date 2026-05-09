@@ -24,12 +24,18 @@ export default class UIScene extends Phaser.Scene {
         .setScrollFactor(0).setDepth(100);
       this._hearts.push(h);
     }
+    this._lastHp = 3;
 
     // Spark counter
     this.add.text(8, 24, '✦', style(8, '#ffe060'))
       .setScrollFactor(0).setDepth(100);
     this._sparks = this.add.text(18, 24, '0', style(8, '#ffe060'))
       .setScrollFactor(0).setDepth(100);
+
+    // Level timer (top-right below character badge)
+    this._timerText = this.add.text(WIDTH - 8, 32, '00:00', style(7, '#80a0c0'))
+      .setOrigin(1, 0).setScrollFactor(0).setDepth(100);
+    this._timerMs = 0;
 
     // Level title strip
     this.add.text(WIDTH / 2, 6, this.level.act, style(7, '#6040a0'))
@@ -47,9 +53,11 @@ export default class UIScene extends Phaser.Scene {
       .setOrigin(1, 0).setScrollFactor(0).setDepth(100);
 
     // Bottom control hint (always visible)
+    const dashHint = charData.attack === 'melee' ? '   X  DASH' : '';
     this.add.text(WIDTH / 2, HEIGHT - 10,
       '← →  MOVE   ↑  JUMP   Z  ' +
         (charData.attack === 'melee' ? 'STRIKE' : 'CAST') +
+        dashHint +
         '   ESC  PAUSE',
       style(7, '#a080d0'))
       .setOrigin(0.5).setScrollFactor(0).setDepth(100);
@@ -75,6 +83,22 @@ export default class UIScene extends Phaser.Scene {
       const lvl = this.scene.get('Level');
       if (lvl?.isPaused) lvl._togglePause();
     });
+  }
+
+  update() {
+    const lvl = this.scene.get('Level');
+    if (!lvl || lvl.isPaused || lvl.finished) return;
+    // Update timer (only re-render once per second to save string ops)
+    const prev = Math.floor(this._timerMs / 1000);
+    this._timerMs = lvl.levelTimer;
+    if (Math.floor(this._timerMs / 1000) !== prev) {
+      this._timerText?.setText(this._fmtTime(this._timerMs));
+    }
+  }
+
+  _fmtTime(ms) {
+    const s = Math.floor(ms / 1000);
+    return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
   }
 
   _buildLoreBanner() {
@@ -153,6 +177,7 @@ export default class UIScene extends Phaser.Scene {
     if (!this._bossBar) return;
     const { frame, fill, label } = this._bossBar;
     label.setText(`${boss.bossName.toUpperCase()} — ${boss.bossTitle}`);
+    fill.setFillStyle(boss.config?.barColor ?? 0xff5020);
     [frame, fill, label].forEach(o => { o.setVisible(true); o.setAlpha(0); });
     fill.width = this._bossBar.fullWidth;
     this.tweens.add({ targets: [frame, fill, label], alpha: 1, duration: 350 });
@@ -201,5 +226,21 @@ export default class UIScene extends Phaser.Scene {
       h.setColor(i < hp ? '#ff5090' : '#401020');
       h.setText(i < hp ? '♥' : '♡');
     });
+    // Pulse the remaining heart(s) red when critically low
+    if (hp === 1 && this._lastHp !== 1) {
+      this.tweens.killTweensOf(this._hearts[0]);
+      this.tweens.add({
+        targets: this._hearts[0],
+        scaleX: 1.4, scaleY: 1.4,
+        yoyo: true, repeat: -1,
+        duration: 280, ease: 'Sine.easeInOut',
+      });
+    } else if (hp > 1) {
+      this._hearts.forEach(h => {
+        this.tweens.killTweensOf(h);
+        h.setScale(1);
+      });
+    }
+    this._lastHp = hp;
   }
 }

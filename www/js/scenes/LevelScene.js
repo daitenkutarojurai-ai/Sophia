@@ -139,7 +139,8 @@ export default class LevelScene extends Phaser.Scene {
         duration: 800 + Math.random() * 400,
         ease: 'Sine.easeInOut',
       });
-      this.add.particles(x, y, 'spark', {
+      // Store emitter ref on spark so it can be destroyed when collected
+      s._particles = this.add.particles(x, y, 'spark', {
         scale: { start: 0.22, end: 0 },
         alpha: { start: 0.5, end: 0 },
         speed: { min: 5, max: 18 },
@@ -418,6 +419,7 @@ export default class LevelScene extends Phaser.Scene {
 
     this.physics.add.overlap(this.player, this.sparks, (_p, spark) => {
       this._emitCollectFX(spark.x, spark.y);
+      spark._particles?.destroy();
       spark.destroy();
       this.player.collectSpark();
     });
@@ -499,23 +501,107 @@ export default class LevelScene extends Phaser.Scene {
     this.player.setVelocity(0, 0);
     this.cameras.main.flash(500, 220, 180, 255);
 
-    const next = this.levelIndex + 1;
-    const progress = this.registry.get('progress') ?? {};
-    progress.totalSparks = (progress.totalSparks ?? 0) + this.player.sparks;
-    progress.currentLevel = next;
-    this.registry.set('progress', progress);
+    const rank = this._calcRank();
+    this._showRankPanel(rank, () => {
+      const next = this.levelIndex + 1;
+      const progress = this.registry.get('progress') ?? {};
+      progress.totalSparks = (progress.totalSparks ?? 0) + this.player.sparks;
+      progress.currentLevel = next;
+      this.registry.set('progress', progress);
 
-    this.cameras.main.fadeOut(800, 240, 220, 255);
-    this.time.delayedCall(850, () => {
-      this.scene.stop('UI');
-      if (next < LEVELS.length) {
-        this.scene.start('Level',
-          { levelIndex: next, character: this.characterId });
-      } else {
-        this.scene.start('Victory',
-          { totalSparks: progress.totalSparks, character: this.characterId });
-      }
+      this.cameras.main.fadeOut(800, 240, 220, 255);
+      this.time.delayedCall(850, () => {
+        this.scene.stop('UI');
+        if (next < LEVELS.length) {
+          this.scene.start('Level',
+            { levelIndex: next, character: this.characterId });
+        } else {
+          this.scene.start('Victory',
+            { totalSparks: progress.totalSparks, character: this.characterId });
+        }
+      });
     });
+  }
+
+  _calcRank() {
+    const sparks      = this.player.sparks;
+    const maxSparks   = this.level.sparks.length || 1;
+    const timeSec     = this.levelTimer / 1000;
+    const noHit       = this.player.hp >= this.player.maxHp;
+    // Target time: world traversal at 130 px/s
+    const targetSec   = this.level.worldWidth / 130;
+    const timeBonus   = Math.max(0, 1 - Math.max(0, timeSec - targetSec) / (targetSec * 1.5));
+    const sparkBonus  = sparks / maxSparks;
+    const noHitBonus  = noHit ? 1 : 0;
+    const score = timeBonus * 0.4 + sparkBonus * 0.3 + noHitBonus * 0.2 + 0.1;
+    if (score >= 0.9) return 'S';
+    if (score >= 0.7) return 'A';
+    if (score >= 0.5) return 'B';
+    return 'C';
+  }
+
+  _showRankPanel(rank, onDone) {
+    const rankColors = { S: '#ffd700', A: '#c8a0ff', B: '#80c0ff', C: '#806080' };
+    const cx = WIDTH / 2, cy = HEIGHT / 2;
+
+    const bg = this.add.rectangle(cx, cy, 220, 108, 0x000000, 0.9)
+      .setScrollFactor(0).setDepth(200)
+      .setStrokeStyle(1, 0xffe060);
+
+    const lvlLabel = this.add.text(cx, cy - 40, this.level.name, {
+      fontFamily: 'monospace', fontSize: '7px', color: '#c8a0ff',
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(201);
+
+    const timeLabel = this.add.text(cx - 40, cy - 24,
+      `TIME  ${this._fmtTime(this.levelTimer)}`, {
+        fontFamily: 'monospace', fontSize: '8px', color: '#ffe080',
+      }).setOrigin(0.5).setScrollFactor(0).setDepth(201);
+
+    const sparkLabel = this.add.text(cx + 42, cy - 24,
+      `✦ ${this.player.sparks}/${this.level.sparks.length}`, {
+        fontFamily: 'monospace', fontSize: '8px', color: '#ffe080',
+      }).setOrigin(0.5).setScrollFactor(0).setDepth(201);
+
+    const noHitLabel = this.player.hp >= this.player.maxHp
+      ? this.add.text(cx, cy - 10, 'NO DAMAGE', {
+          fontFamily: 'monospace', fontSize: '7px', color: '#80ffb0',
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(201)
+      : null;
+
+    const rankText = this.add.text(cx, cy + 20, rank, {
+      fontFamily: 'monospace', fontSize: '46px',
+      color: rankColors[rank] ?? '#ffffff',
+      stroke: '#000', strokeThickness: 5,
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(201);
+
+    const group = [bg, lvlLabel, timeLabel, sparkLabel, rankText];
+    if (noHitLabel) group.push(noHitLabel);
+    group.forEach(o => o.setAlpha(0));
+
+    this.tweens.add({
+      targets: group, alpha: 1, duration: 380,
+      onComplete: () => {
+        this.tweens.add({
+          targets: rankText,
+          scaleX: 1.12, scaleY: 1.12,
+          yoyo: true, repeat: -1, duration: 340,
+        });
+        this.time.delayedCall(2400, () => {
+          this.tweens.add({
+            targets: group, alpha: 0, duration: 450,
+            onComplete: () => {
+              group.forEach(o => o.destroy());
+              onDone();
+            },
+          });
+        });
+      },
+    });
+  }
+
+  _fmtTime(ms) {
+    const s = Math.floor(ms / 1000);
+    return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
   }
 
   _loseLevel() {

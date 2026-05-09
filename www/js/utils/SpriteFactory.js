@@ -1084,30 +1084,54 @@ export default class SpriteFactory {
 
   static _spark(scene) {
     const { canvas, ctx } = SpriteFactory._canvas(14, 14);
+    // Outer soft radial glow
     const glow = ctx.createRadialGradient(7, 7, 0, 7, 7, 7);
     glow.addColorStop(0, '#ffffff');
-    glow.addColorStop(0.4, '#fff0b0');
-    glow.addColorStop(1, 'rgba(255, 240, 180, 0)');
+    glow.addColorStop(0.35, '#fff0a0');
+    glow.addColorStop(1, 'rgba(255, 220, 100, 0)');
     ctx.fillStyle = glow;
     ctx.fillRect(0, 0, 14, 14);
-    ctx.fillStyle = '#ffffc0';
+    // 4-point star (crisper than 5-point for pixel art)
+    ctx.fillStyle = '#ffffd0';
     SpriteFactory._star(ctx, 7, 7, 4, 5, 2);
+    // Bright center pixel
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(6, 6, 2, 2);
     SpriteFactory._addImage(scene, 'spark', canvas);
   }
 
   static _orb(scene) {
-    const { canvas, ctx } = SpriteFactory._canvas(18, 18);
-    // Outer halo
-    const halo = ctx.createRadialGradient(9, 9, 0, 9, 9, 9);
-    halo.addColorStop(0, 'rgba(220, 180, 255, 0.6)');
-    halo.addColorStop(1, 'rgba(120, 60, 200, 0)');
+    const { canvas, ctx } = SpriteFactory._canvas(20, 20);
+    // Outer radiant glow — golden-white light
+    const halo = ctx.createRadialGradient(10, 10, 0, 10, 10, 10);
+    halo.addColorStop(0, 'rgba(255, 255, 200, 0.9)');
+    halo.addColorStop(0.35, 'rgba(255, 220, 100, 0.45)');
+    halo.addColorStop(1, 'rgba(180, 80, 255, 0)');
     ctx.fillStyle = halo;
-    ctx.fillRect(0, 0, 18, 18);
-    // Core
-    ctx.fillStyle = '#e8c8ff';
-    SpriteFactory._circle(ctx, 9, 9, 4);
+    ctx.fillRect(0, 0, 20, 20);
+    // Four cardinal rays (divine cross)
+    ctx.strokeStyle = '#ffe080';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(10, 2); ctx.lineTo(10, 18);
+    ctx.moveTo(2, 10); ctx.lineTo(18, 10);
+    ctx.stroke();
+    // Diagonal glints (softer)
+    ctx.strokeStyle = 'rgba(255, 240, 180, 0.45)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(4, 4); ctx.lineTo(16, 16);
+    ctx.moveTo(16, 4); ctx.lineTo(4, 16);
+    ctx.stroke();
+    // Bright core diamond
     ctx.fillStyle = '#ffffff';
-    SpriteFactory._circle(ctx, 8, 8, 1.5);
+    ctx.beginPath();
+    ctx.moveTo(10, 7); ctx.lineTo(13, 10); ctx.lineTo(10, 13); ctx.lineTo(7, 10);
+    ctx.closePath();
+    ctx.fill();
+    // Inner hot spot
+    ctx.fillStyle = '#ffe0a0';
+    SpriteFactory._circle(ctx, 10, 10, 1.8);
     SpriteFactory._addImage(scene, 'orb', canvas);
   }
 
@@ -1131,8 +1155,8 @@ export default class SpriteFactory {
 
   static _portal(scene) {
     const { canvas, ctx } = SpriteFactory._canvas(40, 56);
-    // Stone frame
-    ctx.fillStyle = '#3a1060';
+    // Outer stone arch — dark cosmic stone
+    ctx.fillStyle = '#2a0858';
     ctx.beginPath();
     ctx.moveTo(2, 56);
     ctx.lineTo(2, 24);
@@ -1140,11 +1164,19 @@ export default class SpriteFactory {
     ctx.lineTo(38, 56);
     ctx.closePath();
     ctx.fill();
-    // Inner glow
+    // Stone highlight along arch edge
+    ctx.strokeStyle = '#6030a0';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(3, 56); ctx.lineTo(3, 24);
+    ctx.quadraticCurveTo(20, -2, 37, 24); ctx.lineTo(37, 56);
+    ctx.stroke();
+    // Inner portal glow — bright violet-white
     const portalGlow = ctx.createLinearGradient(0, 0, 0, 56);
     portalGlow.addColorStop(0, '#ffffff');
-    portalGlow.addColorStop(0.5, '#ffe0ff');
-    portalGlow.addColorStop(1, '#8040c0');
+    portalGlow.addColorStop(0.3, '#ffe0ff');
+    portalGlow.addColorStop(0.7, '#a060e0');
+    portalGlow.addColorStop(1, '#5020a0');
     ctx.fillStyle = portalGlow;
     ctx.beginPath();
     ctx.moveTo(8, 56);
@@ -1153,38 +1185,58 @@ export default class SpriteFactory {
     ctx.lineTo(32, 56);
     ctx.closePath();
     ctx.fill();
-    // Core beam
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(19, 12, 2, 44);
-    // Runes
+    // Central light beam (bright core)
+    const beamG = ctx.createLinearGradient(20, 0, 20, 56);
+    beamG.addColorStop(0, 'rgba(255,255,255,1)');
+    beamG.addColorStop(0.4, 'rgba(255,255,255,0.8)');
+    beamG.addColorStop(1, 'rgba(180,120,255,0.4)');
+    ctx.fillStyle = beamG;
+    ctx.fillRect(18, 10, 4, 46);
+    // Sacred rune marks
     ctx.fillStyle = '#ffe080';
-    ctx.fillRect(18, 22, 4, 1);
-    ctx.fillRect(18, 32, 4, 1);
-    ctx.fillRect(18, 42, 4, 1);
+    for (let y = 20; y <= 44; y += 8) {
+      ctx.fillRect(14, y, 4, 1);
+      ctx.fillRect(22, y, 4, 1);
+    }
+    // Arch gem
+    const gemG = ctx.createRadialGradient(20, 8, 0, 20, 8, 5);
+    gemG.addColorStop(0, '#ffffff');
+    gemG.addColorStop(0.6, '#c080ff');
+    gemG.addColorStop(1, 'rgba(80, 20, 160, 0)');
+    ctx.fillStyle = gemG;
+    ctx.fillRect(15, 3, 10, 10);
     SpriteFactory._addImage(scene, 'portal', canvas);
   }
 
   static _platform(scene) {
     const { canvas, ctx } = SpriteFactory._canvas(64, 12);
-    // Dark stone body
-    ctx.fillStyle = '#200040';
+    // Dark stone base with subtle block divisions
+    ctx.fillStyle = '#180038';
     ctx.fillRect(0, 0, 64, 12);
-    // Top highlight (ethereal)
-    const topGrad = ctx.createLinearGradient(0, 0, 0, 4);
-    topGrad.addColorStop(0, '#8060d0');
-    topGrad.addColorStop(1, '#3a1070');
-    ctx.fillStyle = topGrad;
-    ctx.fillRect(0, 0, 64, 3);
-    // Glyph marks
-    ctx.strokeStyle = 'rgba(200, 140, 255, 0.4)';
-    ctx.lineWidth = 1;
-    for (let x = 8; x < 64; x += 12) {
-      ctx.beginPath();
-      ctx.moveTo(x, 6); ctx.lineTo(x + 3, 6);
-      ctx.stroke();
-    }
-    // Bottom edge
+    // Block seams every 16px
     ctx.fillStyle = '#10002a';
+    for (let x = 16; x < 64; x += 16) ctx.fillRect(x, 1, 1, 10);
+    // Inner block fill — slight tone variation
+    const blockG = ctx.createLinearGradient(0, 0, 0, 12);
+    blockG.addColorStop(0, 'rgba(50, 20, 100, 0.5)');
+    blockG.addColorStop(1, 'rgba(10, 0, 30, 0.3)');
+    ctx.fillStyle = blockG;
+    ctx.fillRect(0, 0, 64, 12);
+    // Luminous crystal edge strip
+    const topG = ctx.createLinearGradient(0, 0, 0, 4);
+    topG.addColorStop(0, '#b090ff');
+    topG.addColorStop(0.5, '#6040c0');
+    topG.addColorStop(1, 'rgba(60, 20, 120, 0)');
+    ctx.fillStyle = topG;
+    ctx.fillRect(0, 0, 64, 4);
+    // Glyph dots along the crystal edge
+    ctx.fillStyle = 'rgba(220, 180, 255, 0.75)';
+    for (let x = 6; x < 64; x += 12) ctx.fillRect(x, 1, 3, 1);
+    // Subtle inner glow between blocks
+    ctx.fillStyle = 'rgba(120, 60, 200, 0.1)';
+    ctx.fillRect(0, 4, 64, 7);
+    // Bottom void edge
+    ctx.fillStyle = '#06001a';
     ctx.fillRect(0, 11, 64, 1);
     SpriteFactory._addImage(scene, 'platform', canvas);
   }
