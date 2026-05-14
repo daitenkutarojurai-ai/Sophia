@@ -7,6 +7,7 @@ import LevelScene            from './scenes/LevelScene.js';
 import UIScene               from './scenes/UIScene.js';
 import GameOverScene         from './scenes/GameOverScene.js';
 import VictoryScene          from './scenes/VictoryScene.js';
+import { mountTouchControls } from './utils/TouchControls.js';
 
 const config = {
   type: Phaser.AUTO,
@@ -36,3 +37,8 @@ const config = {
 };
 
 window.game = new Phaser.Game(config);
+
+// On-screen pad for touch devices (or ?touch=1). Mounted hidden;
+// LevelScene reveals it on create and hides it on shutdown.
+const params = new URLSearchParams(window.location.search);
+mountTouchControls({ force: params.get('touch') === '1' });

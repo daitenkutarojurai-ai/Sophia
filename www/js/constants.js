@@ -1,6 +1,6 @@
 // ─── GAME CONSTANTS ───────────────────────────────────────────────────────────
 
-export const GAME_VERSION = '0.8.0';
+export const GAME_VERSION = '0.9.0';
 
 // Canvas base resolution (scaled up by Phaser)
 export const WIDTH  = 480;

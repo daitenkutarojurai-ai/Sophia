@@ -213,6 +213,11 @@ sophia-game/
 
 ## 8. TO DO
 
+### ✅ Done (v0.9.0 — Mobile Touch Controls, 2026-05-14)
+- [x] **On-screen D-pad + action buttons** — new `www/js/utils/TouchControls.js`. DOM overlay (D-pad LEFT/RIGHT, JUMP, ATTACK Z, DASH X, PAUSE ‖) positioned over the Phaser canvas. Each button dispatches a synthetic `KeyboardEvent` at `window` (with `keyCode` patched in so Phaser's keyboard plugin reads it), so existing input code in `Sophia` / `Jesus` / `LevelScene` keeps working unchanged.
+- [x] **Mount + lifecycle wiring** — `main.js` calls `mountTouchControls()` after `new Phaser.Game(...)`. Auto-mounts on touch devices (`ontouchstart`, `maxTouchPoints`, or Mobi/Android UA); force-on with `?touch=1` for desktop testing. Pad is hidden by default; `LevelScene.create` shows it and the `SHUTDOWN` event hides it again — so the pad never intercepts menu / prologue / character-select taps.
+- [x] **Stuck-key safety** — `blur` and `visibilitychange` (tab hidden) release every held button + dispatch `keyup`, so backgrounding the app mid-press can't leave a direction "stuck on".
+
 ### ✅ Done (v0.8.0 — Polish, Dash, Shooter Scouts, Rank)
 - [x] **Bug fix: Boss HP bar color** — `UIScene._onBossActivated` now applies the boss's `barColor` (Sabaoth shows blue, Hekate cyan, etc.) instead of always red.
 - [x] **Bug fix: Spark particle emitter cleanup** — Particle emitters attached to collectible orbs are now destroyed when the spark is collected, eliminating lingering floating FX.
@@ -305,9 +310,6 @@ sophia-game/
   - Gnosis Point counter
   - Meta-upgrade shop
   - Run history (time, rank, sparks)
-- [ ] **Touch controls** — for Android
-  - D-pad (left/right), jump button, attack, dash
-  - Use Phaser virtual joystick or custom overlay
 - [ ] **The Adam puzzle mechanic** — in Act 2
   - Sophia must trick Yaldabaoth into animating Adam
   - Puzzle/stealth segment — no combat
