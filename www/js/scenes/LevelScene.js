@@ -63,6 +63,12 @@ export default class LevelScene extends Phaser.Scene {
 
     this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
     this.cameras.main.fadeIn(500, 0, 0, 0);
+
+    // Reveal the on-screen pad while gameplay is active (mounted in main.js).
+    window.__sophiaTouchControls?.show();
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      window.__sophiaTouchControls?.hide();
+    });
   }
 
   update(time, delta) {
