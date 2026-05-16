@@ -174,6 +174,8 @@ export default class Sophia extends Phaser.Physics.Arcade.Sprite {
     this.hp = Math.max(0, this.hp - amount);
     this.isHurt = true;
     this.setTint(0xff4060);
+    this.anims.stop();
+    this.setFrame(5);
 
     const dir = this.flipX ? 1 : -1;
     this.setVelocity(dir * 180, -220);

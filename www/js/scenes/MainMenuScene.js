@@ -12,19 +12,45 @@ export default class MainMenuScene extends Phaser.Scene {
     this.nebula = this.add.tileSprite(0, 0, WIDTH, HEIGHT, 'bg_nebula')
       .setOrigin(0).setAlpha(0.9);
 
-    // Distant Aeon gates (parallax)
+    // Distant Aeon gates (parallax layers)
+    this.add.image(60, 155, 'aeon_gate').setScale(0.45).setAlpha(0.15).setTint(0x8060ff);
+    this.add.image(WIDTH - 60, 155, 'aeon_gate').setScale(0.45).setAlpha(0.15).setTint(0x8060ff);
     this.add.image(90, 130, 'aeon_gate').setScale(0.6).setAlpha(0.25);
     this.add.image(WIDTH - 90, 130, 'aeon_gate').setScale(0.6).setAlpha(0.25);
 
-    // Central Pleroma light
+    // Archon silhouette shadows flanking the title
+    const leftShadow = this.add.image(50, HEIGHT / 2 + 20, 'archon_shadow')
+      .setScale(0.55).setAlpha(0).setTint(0x200830);
+    const rightShadow = this.add.image(WIDTH - 50, HEIGHT / 2 + 20, 'archon_shadow')
+      .setScale(0.55).setAlpha(0).setTint(0x200830).setFlipX(true);
+    this.tweens.add({
+      targets: [leftShadow, rightShadow], alpha: 0.22,
+      delay: 800, duration: 1800, ease: 'Sine.easeIn',
+    });
+    this.tweens.add({
+      targets: leftShadow, y: HEIGHT / 2 + 14,
+      yoyo: true, repeat: -1, duration: 3200, ease: 'Sine.easeInOut',
+    });
+    this.tweens.add({
+      targets: rightShadow, y: HEIGHT / 2 + 26,
+      yoyo: true, repeat: -1, duration: 2800, ease: 'Sine.easeInOut', delay: 400,
+    });
+
+    // Central Pleroma light — double rings for depth
+    const centerOuter = this.add.circle(WIDTH / 2, 90, 70, 0xc8a0ff, 0.04);
     const center = this.add.circle(WIDTH / 2, 90, 50, 0xc8a0ff, 0.08);
     this.tweens.add({
       targets: center,
       scale: 1.3, alpha: 0.18,
       yoyo: true, repeat: -1, duration: 2400, ease: 'Sine.easeInOut',
     });
+    this.tweens.add({
+      targets: centerOuter,
+      scale: 1.2, alpha: 0.1,
+      yoyo: true, repeat: -1, duration: 3600, ease: 'Sine.easeInOut', delay: 600,
+    });
 
-    // Falling sparks
+    // Falling sparks — two layers for depth
     this.add.particles(0, -20, 'spark', {
       x: { min: 0, max: WIDTH },
       y: { min: -10, max: 0 },
@@ -33,9 +59,17 @@ export default class MainMenuScene extends Phaser.Scene {
       scale: { start: 0.4, end: 0 },
       alpha: { start: 0.5, end: 0 },
       tint: [0xc8a0ff, 0xffffff, 0xffe080],
-      lifespan: 5000,
-      frequency: 120,
-      quantity: 1,
+      lifespan: 5000, frequency: 120, quantity: 1,
+    });
+    this.add.particles(0, -20, 'spark', {
+      x: { min: 0, max: WIDTH },
+      y: { min: -10, max: 0 },
+      speedY: { min: 4, max: 14 },
+      scale: { start: 0.7, end: 0 },
+      alpha: { start: 0.2, end: 0 },
+      tint: [0xa080ff, 0xffffff],
+      lifespan: 9000, frequency: 400, quantity: 1,
+      blendMode: 'ADD',
     });
 
     // Title — layered for glow

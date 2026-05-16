@@ -35,13 +35,21 @@ export default class LevelScene extends Phaser.Scene {
     this.physics.world.setBounds(0, 0, worldWidth, HEIGHT);
     this.cameras.main.setBounds(0, 0, worldWidth, HEIGHT);
 
-    // Layered backdrop
+    // Layered backdrop — solid fill + two parallax backgrounds
     this.add.rectangle(0, 0, worldWidth, HEIGHT, bgTint)
       .setOrigin(0).setScrollFactor(0.05);
     this.bgFar = this.add.tileSprite(0, 0, WIDTH, HEIGHT, bgKey)
       .setOrigin(0).setScrollFactor(0).setAlpha(0.85);
     this.bgNear = this.add.tileSprite(0, 0, WIDTH, HEIGHT, 'bg_nebula')
       .setOrigin(0).setScrollFactor(0).setAlpha(0.55);
+
+    // Bottom ground fog — adds depth below platforms
+    const fogTint = this.level.decor === 'shadows' ? 0x3a0010 :
+                    this.level.decor === 'ascending' ? 0x604010 : 0x100040;
+    this.add.rectangle(0, HEIGHT - 18, worldWidth, 18, fogTint, 0.6)
+      .setOrigin(0).setScrollFactor(1).setDepth(-1);
+    this.add.rectangle(0, HEIGHT - 10, worldWidth, 10, fogTint, 0.9)
+      .setOrigin(0).setScrollFactor(1).setDepth(-1);
 
     this._buildDecor(decor, worldWidth);
     this._buildPlatforms();
@@ -352,17 +360,32 @@ export default class LevelScene extends Phaser.Scene {
   }
 
   _buildAtmosphereFX() {
-    // Per-act particle mood
     if (this.level.decor === 'gates') {
       // Descending divine sparks
       this.add.particles(0, 0, 'spark', {
-        x: { min: 0, max: WIDTH },
-        y: -10,
+        x: { min: 0, max: WIDTH }, y: -10,
         speedY: { min: 20, max: 60 },
         scale: { start: 0.3, end: 0 },
         alpha: { start: 0.35, end: 0 },
         lifespan: 5000, frequency: 250, quantity: 1,
         scrollFactor: 0, tint: [0xc8a0ff, 0xffffff],
+      });
+      // Slower large motes for depth
+      this.add.particles(0, 0, 'spark', {
+        x: { min: 0, max: WIDTH }, y: -10,
+        speedY: { min: 8, max: 22 },
+        scale: { start: 0.6, end: 0 },
+        alpha: { start: 0.18, end: 0 },
+        lifespan: 8000, frequency: 600, quantity: 1,
+        scrollFactor: 0, tint: [0xa080ff, 0xe0d0ff],
+        blendMode: 'ADD',
+      });
+      // Bottom ambient glow strip
+      const glow = this.add.rectangle(0, HEIGHT - 8, this.level.worldWidth, 16,
+        0x3010a0, 0.18).setOrigin(0).setScrollFactor(1);
+      this.tweens.add({
+        targets: glow, alpha: 0.32,
+        yoyo: true, repeat: -1, duration: 2800, ease: 'Sine.easeInOut',
       });
     } else if (this.level.decor === 'shadows') {
       // Rising fog motes
@@ -375,6 +398,30 @@ export default class LevelScene extends Phaser.Scene {
         lifespan: 6000, frequency: 400, quantity: 1,
         scrollFactor: 0,
       });
+      // Drifting dark smoke
+      this.add.particles(0, HEIGHT, 'spark', {
+        x: { min: 0, max: WIDTH }, y: 0,
+        speedY: { min: -8, max: -3 },
+        speedX: { min: -6, max: 6 },
+        scale: { start: 0.9, end: 0 },
+        alpha: { start: 0.12, end: 0 },
+        tint: [0x200010, 0x3a0820],
+        lifespan: 9000, frequency: 700, quantity: 1,
+        scrollFactor: 0,
+      });
+      // Red eye glints at random top positions
+      for (let i = 0; i < 3; i++) {
+        const ex = 60 + i * 150;
+        const eye = this.add.circle(ex, 30 + i * 25, 2, 0xff2040, 0)
+          .setScrollFactor(0).setDepth(5);
+        this.tweens.add({
+          targets: eye, alpha: 0.7,
+          yoyo: true, repeat: -1,
+          duration: 1800 + i * 600,
+          delay: i * 400,
+          ease: 'Sine.easeInOut',
+        });
+      }
     } else if (this.level.decor === 'ascending') {
       // Golden rising motes
       this.add.particles(0, HEIGHT, 'spark', {
@@ -385,6 +432,16 @@ export default class LevelScene extends Phaser.Scene {
         tint: [0xffe080, 0xffffff, 0xffc060],
         lifespan: 4000, frequency: 180, quantity: 1,
         scrollFactor: 0,
+      });
+      // Brighter fast shards
+      this.add.particles(0, HEIGHT, 'spark', {
+        x: { min: 0, max: WIDTH }, y: 0,
+        speedY: { min: -80, max: -50 },
+        scale: { start: 0.2, end: 0 },
+        alpha: { start: 0.7, end: 0 },
+        tint: [0xffffff, 0xffe8a0],
+        lifespan: 2200, frequency: 350, quantity: 1,
+        scrollFactor: 0, blendMode: 'ADD',
       });
     }
   }
@@ -464,11 +521,19 @@ export default class LevelScene extends Phaser.Scene {
       burst.explode(6);
       this.time.delayedCall(400, () => burst.destroy());
 
-      // Drop a collectible spark
+      // Drop a collectible spark (with particle emitter matching level sparks)
       const s = this.sparks.create(x, y - 8, 'orb');
       s.body.setSize(14, 14);
       this.tweens.add({
         targets: s, y: y - 14, yoyo: true, repeat: -1, duration: 900,
+      });
+      s._particles = this.add.particles(x, y - 8, 'spark', {
+        scale: { start: 0.22, end: 0 },
+        alpha: { start: 0.5, end: 0 },
+        speed: { min: 5, max: 18 },
+        lifespan: 900, frequency: 300, quantity: 1,
+        tint: this._getSparkTint(),
+        follow: s,
       });
     });
   }

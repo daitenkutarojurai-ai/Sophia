@@ -1,6 +1,6 @@
 // ─── GAME CONSTANTS ───────────────────────────────────────────────────────────
 
-export const GAME_VERSION = '0.9.0';
+export const GAME_VERSION = '0.9.1';
 
 // Canvas base resolution (scaled up by Phaser)
 export const WIDTH  = 480;
@@ -75,6 +75,7 @@ export const BOSSES = {
     bodyOX: 12, bodyOY: 14,
     deathTints: [0xffffff, 0xffe060, 0xff8020, 0xff3010],
     barColor: 0xff5020,
+    namePlateColor: '#ffe060',
     lore:
       '"Authades, Self-Willed, knew no master.\n' +
       'His fire blazed in pride — but Sophia\'s\n' +
@@ -92,6 +93,7 @@ export const BOSSES = {
     bodyOX: 13, bodyOY: 13,
     deathTints: [0xffffff, 0x8060ff, 0x4020a0, 0x100040],
     barColor: 0x6040c0,
+    namePlateColor: '#a080ff',
     lore:
       '"Paraplex stirred the shadows, scattering thought.\n' +
       'Yet through prayer the veil thinned — and his\n' +
@@ -109,6 +111,7 @@ export const BOSSES = {
     bodyOX: 13, bodyOY: 12,
     deathTints: [0xffffff, 0x80ffff, 0x40a0c0, 0x103060],
     barColor: 0x40c0e0,
+    namePlateColor: '#80ffff',
     lore:
       '"Three faces had Hekate, three lies in one mouth.\n' +
       'I knew her by the truth she could not bear:\n' +
@@ -126,6 +129,7 @@ export const BOSSES = {
     bodyOX: 10, bodyOY: 18,
     deathTints: [0xffffff, 0xa08040, 0x604020, 0x201808],
     barColor: 0x806030,
+    namePlateColor: '#c0a060',
     lore:
       '"Ariouth opened his maw — vast as the Below.\n' +
       'But what he swallowed was only stone and dust.\n' +
@@ -143,6 +147,7 @@ export const BOSSES = {
     bodyOX: 14, bodyOY: 10,
     deathTints: [0xffffff, 0xa0e0ff, 0x4080c0, 0x081030],
     barColor: 0x60a0ff,
+    namePlateColor: '#a0e0ff',
     lore:
       '"Sabaoth roared in storm and thunder,\n' +
       'his lightning chasing me through Chaos.\n' +

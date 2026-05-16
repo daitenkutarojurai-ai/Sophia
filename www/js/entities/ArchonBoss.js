@@ -49,8 +49,35 @@ export default class ArchonBoss extends Phaser.Physics.Arcade.Sprite {
   // Subclasses override.
   _runAI(_time, _delta) {}
 
+  // Subclasses call this from _onActivate — color comes from config.namePlateColor.
+  _showNamePlate() {
+    const color = this.config.namePlateColor ?? '#ffe060';
+    const cam = this.scene.cameras.main;
+    const t = this.scene.add.text(cam.width / 2, 70,
+      `${this.bossName.toUpperCase()}\n— ${this.bossTitle} —`, {
+        fontFamily: 'monospace', fontSize: '14px',
+        color, stroke: '#000', strokeThickness: 3,
+        align: 'center',
+      })
+      .setOrigin(0.5)
+      .setScrollFactor(0)
+      .setDepth(150)
+      .setAlpha(0);
+    this.scene.tweens.add({
+      targets: t, alpha: 1, duration: 300,
+      onComplete: () => {
+        this.scene.time.delayedCall(1500, () => {
+          this.scene.tweens.add({
+            targets: t, alpha: 0, duration: 500,
+            onComplete: () => t.destroy(),
+          });
+        });
+      },
+    });
+  }
+
   takeDamage(amount = 1) {
-    if (this.isDead || this.isInvulnerable) return;
+    if (this.isDead || this.isInvulnerable || !this.activated) return;
     this.hp = Math.max(0, this.hp - amount);
     this.scene.events.emit('boss_hp', { hp: this.hp, max: this.maxHp });
 
