@@ -305,13 +305,18 @@ export default class PrologueScene extends Phaser.Scene {
         break;
       }
       case 'archons': {
-        // Three looming Archon silhouettes closing in
-        const positions = [[cx - 90, cy + 10], [cx + 90, cy + 10], [cx, cy - 10]];
-        positions.forEach(([x, y]) => {
-          const a = this.add.image(x, y, 'archon_shadow').setScale(0.8)
+        // Three looming Archon silhouettes closing in — each stops at a distinct
+        // position surrounding Sophia, not all converging to the same centre point.
+        const archonDefs = [
+          { sx: cx - 90, sy: cy + 10, tx: cx - 28, ty: cy + 10 },
+          { sx: cx + 90, sy: cy + 10, tx: cx + 28, ty: cy + 10 },
+          { sx: cx,      sy: cy - 60, tx: cx,      ty: cy - 18 },
+        ];
+        archonDefs.forEach(({ sx, sy, tx, ty }) => {
+          const a = this.add.image(sx, sy, 'archon_shadow').setScale(0.8)
             .setAlpha(0.8);
           layer.add(a);
-          this.tweens.add({ targets: a, x: cx, alpha: 1,
+          this.tweens.add({ targets: a, x: tx, y: ty, alpha: 1,
             duration: 2500, ease: 'Power2' });
         });
         // Sophia center, pulled

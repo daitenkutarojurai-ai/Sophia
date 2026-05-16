@@ -1426,26 +1426,66 @@ export default class SpriteFactory {
   }
 
   static _crown(scene) {
-    const { canvas, ctx } = SpriteFactory._canvas(40, 24);
-    const gg = ctx.createLinearGradient(0, 0, 0, 24);
+    const { canvas, ctx } = SpriteFactory._canvas(48, 28);
+
+    // Outer radiant glow behind crown
+    const glow = ctx.createRadialGradient(24, 14, 2, 24, 14, 20);
+    glow.addColorStop(0, 'rgba(255, 230, 100, 0.55)');
+    glow.addColorStop(0.6, 'rgba(255, 180, 40, 0.2)');
+    glow.addColorStop(1, 'rgba(255, 200, 80, 0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, 48, 28);
+
+    // Crown gradient fill
+    const gg = ctx.createLinearGradient(0, 0, 0, 28);
     gg.addColorStop(0, '#ffffff');
-    gg.addColorStop(0.4, '#ffe080');
-    gg.addColorStop(1, '#a06020');
+    gg.addColorStop(0.3, '#ffe8a0');
+    gg.addColorStop(0.7, '#d4a020');
+    gg.addColorStop(1, '#7a4010');
     ctx.fillStyle = gg;
+
     // Crown band
-    ctx.fillRect(4, 14, 32, 8);
-    // Points
+    ctx.fillRect(4, 16, 40, 10);
+
+    // 5 pointed spires
+    const tips = [4, 12, 20, 28, 36];
     for (let i = 0; i < 5; i++) {
-      const x = 4 + i * 8;
-      SpriteFactory._triangle(ctx, x, 14, x + 4, 0, x + 8, 14);
+      const x = tips[i] + 4;
+      const h = i === 2 ? 3 : (i === 1 || i === 3 ? 9 : 14);
+      SpriteFactory._triangle(ctx, x - 4, 16, x, 16 - h, x + 4, 16);
     }
-    // Gems
-    ctx.fillStyle = '#ff80c0';
-    ctx.fillRect(11, 18, 2, 2);
-    ctx.fillStyle = '#80ffff';
-    ctx.fillRect(19, 18, 2, 2);
-    ctx.fillStyle = '#ffffc0';
-    ctx.fillRect(27, 18, 2, 2);
+
+    // Highlight on spire edges
+    ctx.strokeStyle = 'rgba(255, 255, 200, 0.6)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 5; i++) {
+      const x = tips[i] + 4;
+      const h = i === 2 ? 3 : (i === 1 || i === 3 ? 9 : 14);
+      ctx.beginPath();
+      ctx.moveTo(x - 3, 15);
+      ctx.lineTo(x, 16 - h);
+      ctx.stroke();
+    }
+
+    // Band highlight line
+    ctx.strokeStyle = 'rgba(255, 255, 200, 0.45)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(4, 17);
+    ctx.lineTo(44, 17);
+    ctx.stroke();
+
+    // Gems on band (pink, cyan, gold)
+    const gemData = [[14, 21, '#ff80d0'], [24, 21, '#80ffff'], [34, 21, '#ffffa0']];
+    for (const [gx, gy, gc] of gemData) {
+      const gr = ctx.createRadialGradient(gx, gy, 0.3, gx, gy, 2.5);
+      gr.addColorStop(0, '#ffffff');
+      gr.addColorStop(0.5, gc);
+      gr.addColorStop(1, 'rgba(0,0,0,0.3)');
+      ctx.fillStyle = gr;
+      ctx.fillRect(gx - 2, gy - 2, 4, 4);
+    }
+
     SpriteFactory._addImage(scene, 'crown', canvas);
   }
 

@@ -9,6 +9,8 @@ export default class VictoryScene extends Phaser.Scene {
   }
 
   create() {
+    const charData = CHARACTERS[this.characterId] ?? CHARACTERS.sophia;
+
     // Blaze of restored light
     this.add.rectangle(0, 0, WIDTH, HEIGHT, 0x1a0030).setOrigin(0);
     this.add.tileSprite(0, 0, WIDTH, HEIGHT, 'bg_ascent')
@@ -36,12 +38,13 @@ export default class VictoryScene extends Phaser.Scene {
 
     // Central figure with crown
     const cx = WIDTH / 2, cy = HEIGHT / 2 - 10;
-    const haloBehind = this.add.circle(cx, cy, 60, 0xffe080, 0.2);
+    const haloColor = this.characterId === 'jesus' ? 0xffcc80 : 0xffe080;
+    const haloBehind = this.add.circle(cx, cy, 60, haloColor, 0.2);
     this.tweens.add({ targets: haloBehind,
       scale: 1.3, alpha: 0.4,
       yoyo: true, repeat: -1, duration: 1600 });
 
-    const figure = this.add.sprite(cx, cy + 6, 'sophia', 0).setScale(3);
+    this.add.sprite(cx, cy + 6, charData.texture, 0).setScale(3);
     this.add.image(cx, cy - 26, 'crown').setScale(0.9);
 
     // Falling divine sparks
@@ -60,11 +63,13 @@ export default class VictoryScene extends Phaser.Scene {
       color: '#ffffff', stroke: '#604020', strokeThickness: 3,
     }).setOrigin(0.5);
 
-    this.add.text(WIDTH / 2, 54,
-      'Sophia is crowned the Light-Maiden.', {
-        fontFamily: 'monospace', fontSize: '9px',
-        color: '#ffe080', fontStyle: 'italic',
-      }).setOrigin(0.5);
+    const subtitle = this.characterId === 'jesus'
+      ? 'The Light has guided her home.'
+      : 'Sophia is crowned the Light-Maiden.';
+    this.add.text(WIDTH / 2, 54, subtitle, {
+      fontFamily: 'monospace', fontSize: '9px',
+      color: '#ffe080', fontStyle: 'italic',
+    }).setOrigin(0.5);
 
     this.add.text(WIDTH / 2, HEIGHT - 80,
       '"And the Aeons sang: Thou art restored,\n the scattered light is remembered."', {

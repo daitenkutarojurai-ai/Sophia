@@ -17,20 +17,30 @@ export default class UIScene extends Phaser.Scene {
       stroke: '#000', strokeThickness: 2,
     });
 
-    // HUD hearts
+    // HUD hearts — built dynamically after player exists (deferred 1 frame)
     this._hearts = [];
-    for (let i = 0; i < 3; i++) {
-      const h = this.add.text(8 + i * 12, 8, '♥', style(11, '#ff5090'))
-        .setScrollFactor(0).setDepth(100);
-      this._hearts.push(h);
-    }
     this._lastHp = 3;
+    this.time.delayedCall(0, () => {
+      const lvl = this.scene.get('Level');
+      const maxHp = lvl?.player?.maxHp ?? 3;
+      this._lastHp = maxHp;
+      for (let i = 0; i < maxHp; i++) {
+        const h = this.add.text(8 + i * 12, 8, '♥', style(11, '#ff5090'))
+          .setScrollFactor(0).setDepth(100);
+        this._hearts.push(h);
+      }
+    });
 
     // Spark counter
     this.add.text(8, 24, '✦', style(8, '#ffe060'))
       .setScrollFactor(0).setDepth(100);
     this._sparks = this.add.text(18, 24, '0', style(8, '#ffe060'))
       .setScrollFactor(0).setDepth(100);
+
+    // Form indicator (Sophia only) — shown when a new form is reached
+    this._formText = this.add.text(8, 34, '', style(6, '#c8a0ff'))
+      .setScrollFactor(0).setDepth(100).setAlpha(0);
+    this._currentFormIndex = 0;
 
     // Level timer (top-right below character badge)
     this._timerText = this.add.text(WIDTH - 8, 32, '00:00', style(7, '#80a0c0'))
@@ -71,7 +81,7 @@ export default class UIScene extends Phaser.Scene {
     // Subscribe to level events
     const levelScene = this.scene.get('Level');
     levelScene.events.on('hp_updated',     hp => this._updateHp(hp));
-    levelScene.events.on('sparks_updated', n  => this._sparks.setText(String(n)));
+    levelScene.events.on('sparks_updated', n  => { this._sparks.setText(String(n)); this._checkForm(n); });
     levelScene.events.on('combo_hit',      () => this._onComboHit());
     levelScene.events.on('game_paused',    p  => this._setPaused(p));
     levelScene.events.on('boss_activated', b  => this._onBossActivated(b));
@@ -219,6 +229,31 @@ export default class UIScene extends Phaser.Scene {
 
   _setPaused(paused) {
     this._pauseObjects?.forEach(o => o.setVisible(paused));
+  }
+
+  _checkForm(sparks) {
+    if (this.characterId !== 'sophia') return;
+    const FORMS = [
+      { sparks: 0,   name: 'Fallen Sophia' },
+      { sparks: 10,  name: 'Pistis — Faith Form' },
+      { sparks: 25,  name: 'Form of Zoe' },
+      { sparks: 50,  name: 'Wings of Pistis' },
+      { sparks: 100, name: 'Light-Maiden (Crown)' },
+    ];
+    let newIndex = 0;
+    for (let i = FORMS.length - 1; i >= 0; i--) {
+      if (sparks >= FORMS[i].sparks) { newIndex = i; break; }
+    }
+    if (newIndex > this._currentFormIndex) {
+      this._currentFormIndex = newIndex;
+      const form = FORMS[newIndex];
+      this.tweens.killTweensOf(this._formText);
+      this._formText.setText(`✧ ${form.name}`).setAlpha(1);
+      this.tweens.add({
+        targets: this._formText, alpha: 0,
+        delay: 2200, duration: 700,
+      });
+    }
   }
 
   _updateHp(hp) {

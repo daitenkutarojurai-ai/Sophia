@@ -52,31 +52,6 @@ export default class Hekate extends ArchonBoss {
     if (phase >= 1) this.attackCooldown = 600;
   }
 
-  _showNamePlate() {
-    const cam = this.scene.cameras.main;
-    const t = this.scene.add.text(cam.width / 2, 70,
-      `${this.bossName.toUpperCase()}\n— ${this.bossTitle} —`, {
-        fontFamily: 'monospace', fontSize: '14px',
-        color: '#80ffff', stroke: '#000', strokeThickness: 3,
-        align: 'center',
-      })
-      .setOrigin(0.5)
-      .setScrollFactor(0)
-      .setDepth(150)
-      .setAlpha(0);
-    this.scene.tweens.add({
-      targets: t, alpha: 1, duration: 300,
-      onComplete: () => {
-        this.scene.time.delayedCall(1500, () => {
-          this.scene.tweens.add({
-            targets: t, alpha: 0, duration: 500,
-            onComplete: () => t.destroy(),
-          });
-        });
-      },
-    });
-  }
-
   _runAI(_time, delta) {
     // Strafe horizontally inside arena.
     if (this.phaseIndex >= 1) {

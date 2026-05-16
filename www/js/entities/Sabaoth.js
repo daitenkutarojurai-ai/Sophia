@@ -31,6 +31,7 @@ export default class Sabaoth extends ArchonBoss {
     this._lastAttack = 'none';
     this._teleporting = false;
     this._anchorY = y;
+    this._originalAnchorY = y;
     this._bobT = 0;
   }
 
@@ -51,31 +52,6 @@ export default class Sabaoth extends ArchonBoss {
       }
     });
     if (phase >= 1) this.attackCooldown = 600;
-  }
-
-  _showNamePlate() {
-    const cam = this.scene.cameras.main;
-    const t = this.scene.add.text(cam.width / 2, 70,
-      `${this.bossName.toUpperCase()}\n— ${this.bossTitle} —`, {
-        fontFamily: 'monospace', fontSize: '14px',
-        color: '#a0e0ff', stroke: '#000', strokeThickness: 3,
-        align: 'center',
-      })
-      .setOrigin(0.5)
-      .setScrollFactor(0)
-      .setDepth(150)
-      .setAlpha(0);
-    this.scene.tweens.add({
-      targets: t, alpha: 1, duration: 300,
-      onComplete: () => {
-        this.scene.time.delayedCall(1500, () => {
-          this.scene.tweens.add({
-            targets: t, alpha: 0, duration: 500,
-            onComplete: () => t.destroy(),
-          });
-        });
-      },
-    });
   }
 
   _runAI(_time, delta) {
@@ -172,6 +148,8 @@ export default class Sabaoth extends ArchonBoss {
                 this.phaseIndex === 2 ? 320 : 260);
               this.scene.cameras.main.shake(140, 0.007);
               this.scene.cameras.main.flash(120, 220, 240, 255);
+              // Restore original hover height so bob stays centred correctly.
+              this._anchorY = this._originalAnchorY;
               this._teleporting = false;
             });
           },
