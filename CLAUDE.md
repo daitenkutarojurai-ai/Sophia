@@ -213,6 +213,21 @@ sophia-game/
 
 ## 8. TO DO
 
+### ✅ Done (v0.9.1 — Graphical Polish & Bug Fixes, 2026-05-16)
+- [x] **Bug fix: Sabaoth `_anchorY` permanently overwritten** — `_strikeFromAbove` was setting `this._anchorY = 80` (top of screen) permanently, causing Sabaoth to hover at the ceiling after his first "strike" attack. Now saves `_originalAnchorY` in constructor and restores it after the bolt fires.
+- [x] **Bug fix: Boss damageable during spawn fade-in** — `ArchonBoss.takeDamage` now guards `!this.activated`, preventing the player from dealing damage to a boss before its intro animation completes.
+- [x] **Bug fix: Enemy-dropped sparks missing particle emitter** — Sparks created by `_setupEvents` (on enemy kill) now get a particle emitter matching level-placed sparks. Previously `spark._particles?.destroy()` silently skipped them.
+- [x] **Bug fix: Sophia hurt animation** — `takeDamage` now stops the current animation and sets frame 5 (hurt pose). Previously the frame was defined but never played.
+- [x] **Bug fix: Prologue archon convergence** — All 3 archon silhouettes in the "archons" panel were tweening `x` to the same `cx` centre, overlapping completely. Each now converges to a distinct position surrounding Sophia.
+- [x] **Refactor: `_showNamePlate()` deduplicated** — Removed 5 identical copies from Authades, Paraplex, Hekate, Ariouth, Sabaoth; single implementation moved to `ArchonBoss` base class. Colour driven by `namePlateColor` field added to each `BOSSES` config entry in `constants.js`.
+- [x] **Visual: Dynamic HUD hearts** — `UIScene` now builds heart slots from `player.maxHp` (deferred 1 frame so player is constructed) instead of hardcoded 3. Jesus's 5-heart upgrade path is now UI-ready.
+- [x] **Visual: Form indicator** — When Sophia collects enough sparks to reach a new transformation form, a `"✧ Form Name"` label fades in briefly on the HUD (`UIScene._checkForm`).
+- [x] **Visual: VictoryScene character-aware** — Victory screen now displays the correct character sprite (Sophia or Jesus) and matching halo colour; subtitle line adapts to character.
+- [x] **Visual: GameOver improvements** — Displays level name where the player fell ("Fell in: Aeon X — …"), dark vignette gradient, heavier crimson particle rain (fine-rain + falling sparks), and a random title-flicker effect for atmosphere.
+- [x] **Visual: Main menu depth** — Added archon silhouette pair (flanking, fading in, bobbing on independent tweens), second Pleroma glow ring, and a slow large-mote spark layer behind the fast layer.
+- [x] **Visual: LevelScene atmosphere** — Ground fog strip at scene bottom (colour per act); Act I gets a second slow large-mote particle layer + bottom glow strip; Act II gets drifting smoke + 3 red eye glints; Act III gets fast shard layer.
+- [x] **Visual: Crown sprite rebuilt** — Wider canvas (48×28), radial outer glow, 5-spire layout with tallest centre, per-spire edge highlights, band highlight, gem radial gradients.
+
 ### ✅ Done (v0.9.0 — Mobile Touch Controls, 2026-05-14)
 - [x] **On-screen D-pad + action buttons** — new `www/js/utils/TouchControls.js`. DOM overlay (D-pad LEFT/RIGHT, JUMP, ATTACK Z, DASH X, PAUSE ‖) positioned over the Phaser canvas. Each button dispatches a synthetic `KeyboardEvent` at `window` (with `keyCode` patched in so Phaser's keyboard plugin reads it), so existing input code in `Sophia` / `Jesus` / `LevelScene` keeps working unchanged.
 - [x] **Mount + lifecycle wiring** — `main.js` calls `mountTouchControls()` after `new Phaser.Game(...)`. Auto-mounts on touch devices (`ontouchstart`, `maxTouchPoints`, or Mobi/Android UA); force-on with `?touch=1` for desktop testing. Pad is hidden by default; `LevelScene.create` shows it and the `SHUTDOWN` event hides it again — so the pad never intercepts menu / prologue / character-select taps.
@@ -410,3 +425,7 @@ npx cap open android
 - **Bosses live in the `enemies` group** — ArchonBoss extends `Phaser.Physics.Arcade.Sprite` and `LevelScene._buildBoss` adds it to `this.enemies` so the existing platform-collider, melee iteration, projectile→enemy overlap, and player-touch overlap all cover it for free. Boss-specific behavior is `boss.update()` (called via the enemies forEach in the scene update). Boss starts with `setActive(false)` + `body.enable=false` and is revealed by `_triggerBossArena()` when the player crosses `level.boss.triggerX`.
 - **Boss arena = invisible static walls in `platforms`** — On trigger, two transparent rectangles at `arenaX-4` and `arenaX+arenaWidth` are added to the platforms group; the camera is clamped to the arena bounds. On `boss_killed`, walls are removed and bounds restored.
 - **Exit sealing on boss levels** — When `level.boss` is present, `_buildExit` keeps the portal invisible + `body.enable=false` and stops its particle emitter / hides its rune ring. `_onBossKilled` re-enables everything and fades the portal in.
+- **`_showNamePlate()` lives in ArchonBoss** — Colour supplied by `config.namePlateColor`. Do NOT re-add per-boss copies; just set `namePlateColor` in `BOSSES`.
+- **Boss `takeDamage` guards `!this.activated`** — Bosses cannot be hit during spawn fade-in. The chain is: `setActive(true)` → fade-in tween → `activate()` → `activated = true`. Only then is damage accepted.
+- **UIScene hearts are dynamic** — Built in a `delayedCall(0)` so `player.maxHp` is readable. When Jesus's HP is changed to 5, the UI follows automatically.
+- **Form indicator driven by `sparks_updated` event** — `UIScene._checkForm(sparks)` compares against the FORMS array and shows a label on first threshold crossing. Thresholds: 0/10/25/50/100 sparks.
