@@ -1,6 +1,6 @@
 // ─── GAME CONSTANTS ───────────────────────────────────────────────────────────
 
-export const GAME_VERSION = '0.9.1';
+export const GAME_VERSION = '0.10.0';
 
 // Canvas base resolution (scaled up by Phaser)
 export const WIDTH  = 480;
@@ -152,6 +152,24 @@ export const BOSSES = {
       '"Sabaoth roared in storm and thunder,\n' +
       'his lightning chasing me through Chaos.\n' +
       'Yet the Light I bore could not be drowned."',
+  },
+  adonaios: {
+    archonId: 7,
+    name: 'Adonaios',
+    title: 'The Hidden Lord',
+    element: 'Void',
+    texture: 'adonaios',
+    hp: 24,
+    phaseCount: 3,
+    bodyW: 30, bodyH: 44,
+    bodyOX: 15, bodyOY: 10,
+    deathTints: [0xffffff, 0x8060ff, 0x4020a0, 0x100020],
+    barColor: 0x6040c0,
+    namePlateColor: '#a080ff',
+    lore:
+      '"Adonaios drew his veil between us —\n' +
+      'thinking the dark would swallow my Light.\n' +
+      'But the spark within me lit even his Void."',
   },
 };
 
@@ -377,6 +395,51 @@ export const LEVELS = [
   },
   {
     id: 6,
+    act: 'Act II — The Chaos',
+    name: 'Aeon VII — The Veil of Adonaios',
+    subtitle: 'The Hidden Lord rules the empty places of Chaos.',
+    lore: '"Adonaios kept his face from me,\n yet I felt him in the silence between heartbeats."',
+    worldWidth: 2200,
+    bgKey: 'bg_chaos',
+    bgTint: 0x06001a,
+    decor: 'shadows',
+    worldColor: '#a080ff',
+    worldColorHex: 0xa080ff,
+    platforms: [
+      [0,    254, 220],
+      [280,  254, 140],
+      [460,  220, 100],
+      [620,  180, 100],
+      [780,  220, 100],
+      [940,  254, 160],
+      [1140, 220, 80],
+      [1260, 180, 80],
+      [1380, 220, 80],
+      [1500, 254, 200],
+      [1720, 254, 480],
+    ],
+    enemies: [
+      [320, 220, 'patrol'],
+      [520, 190, 'shooter'],
+      [820, 190, 'chase'],
+      [1060, 220, 'patrol'],
+      [1300, 150, 'shooter'],
+    ],
+    sparks: [
+      [160, 220], [340, 220], [500, 190], [660, 150],
+      [820, 190], [980, 220], [1180, 190],
+      [1300, 150], [1420, 190], [1560, 220], [1860, 220],
+    ],
+    boss: {
+      id: 'adonaios',
+      spawnX: 1980, spawnY: 170,
+      triggerX: 1780,
+      arenaX: 1720, arenaWidth: 480,
+    },
+    exit: [2160, 222],
+  },
+  {
+    id: 7,
     act: 'Act III — The Ascent',
     name: 'Aeon XIII — The Veil Parts',
     subtitle: 'Guided by the Light. Rising through the restored gates.',

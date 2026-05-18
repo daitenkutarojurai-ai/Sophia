@@ -213,6 +213,18 @@ sophia-game/
 
 ## 8. TO DO
 
+### ✅ Done (v0.10.0 — Act II Boss: Adonaios, 2026-05-18)
+- [x] **Adonaios boss fight** — `entities/Adonaios.js`, Archon VII "The Hidden Lord", Void. 3 phases:
+  - Phase 0 — single slow void orb aimed at the player.
+  - Phase 1 — alternates a 3-orb spread burst and a "veil" pass — Adonaios fades to alpha 0.15 and drifts to a new arena position before reappearing with a telegraph burst.
+  - Phase 2 — alternates veil → void zone (a stationary damaging orb that lingers ~3.2 s near the floor) → 5-orb fan; faster veil cadence.
+  - Hovering boss (no gravity) with a constant deep-violet void aura, sine-bob hover, and an `_anchorY` that tracks the current hover height.
+- [x] **`BOSSES.adonaios` config added** — hp 24, phaseCount 3, violet death tints, violet HP bar, 3-line lore quotation.
+- [x] **Act II level (Aeon VII — The Veil of Adonaios) added** — worldWidth 2200, second Act II boss level inserted between Sabaoth (Act II) and the Veil (Act III). Boss arena mirrors Sabaoth's (arenaX 1720, arenaWidth 480, triggerX 1780).
+- [x] **`BOSS_CLASSES.adonaios = Adonaios`** — registered in `LevelScene`; the existing trigger / arena-wall / sealed-exit / boss-lore-panel pipeline drives the fight automatically.
+- [x] **Adonaios + void_orb sprites** — `SpriteFactory._adonaiosBoss` (60×60 deeply-hooded specter with starfield-flecked cloak, violet void-eyes inside a shadowed cowl, ringed void sigil on the chest, tattered phantom hem) and `SpriteFactory._voidOrb` (16×16 dark core with violet rim and inner star-flecks).
+- [x] **`GAME_VERSION` bumped to 0.10.0** — first new Archon since Sabaoth.
+
 ### ✅ Done (v0.9.1 — Graphical Polish & Bug Fixes, 2026-05-16)
 - [x] **Bug fix: Sabaoth `_anchorY` permanently overwritten** — `_strikeFromAbove` was setting `this._anchorY = 80` (top of screen) permanently, causing Sabaoth to hover at the ceiling after his first "strike" attack. Now saves `_originalAnchorY` in constructor and restores it after the bolt fires.
 - [x] **Bug fix: Boss damageable during spawn fade-in** — `ArchonBoss.takeDamage` now guards `!this.activated`, preventing the player from dealing damage to a boss before its intro animation completes.
@@ -313,7 +325,7 @@ sophia-game/
   - Stealth sections (avoid Archon patrols)
   - 13 repentance prayers = collectible lore items
   - Jesus appears at end of Act 2 (hearing her cries)
-- [ ] **More Archon bosses (Acts II–III)** — extend ArchonBoss for Adonaios (#7 Void) and Astaphaios (#8 Acid) for Act II; Ailoaios (#9 Mirror), Oraios (#10 Corrupt Light), Adamas (#11 Stone), Sabaoth-Repentant (#12), and The Veil (#13) for Act III / Finale. Use the `BOSSES` / `BOSS_CLASSES` registry pattern. (Sabaoth #6 done in v0.7.0.)
+- [ ] **More Archon bosses (Acts II–III)** — extend ArchonBoss for Astaphaios (#8 Acid) for Act II; Ailoaios (#9 Mirror), Oraios (#10 Corrupt Light), Adamas (#11 Stone), Sabaoth-Repentant (#12), and The Veil (#13) for Act III / Finale. Use the `BOSSES` / `BOSS_CLASSES` registry pattern. (Sabaoth #6 done in v0.7.0; Adonaios #7 done in v0.10.0.)
 
 ### 🟡 Medium Priority
 - [ ] **Act3Scene** — The Ascent

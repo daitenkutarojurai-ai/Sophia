@@ -35,6 +35,8 @@ export default class SpriteFactory {
     SpriteFactory._rockShard(scene);
     SpriteFactory._sabaothBoss(scene);
     SpriteFactory._lightningBolt(scene);
+    SpriteFactory._adonaiosBoss(scene);
+    SpriteFactory._voidOrb(scene);
     SpriteFactory._crown(scene);
   }
 
@@ -654,6 +656,141 @@ export default class SpriteFactory {
     ctx.closePath();
     ctx.fill();
     SpriteFactory._addImage(scene, 'lightning_bolt', canvas);
+  }
+
+  // ── Adonaios — the Hidden Lord (Archon VII, Void) ─────────────────────────
+
+  static _adonaiosBoss(scene) {
+    const fw = 60, fh = 60, frames = 2;
+    const { canvas, ctx } = SpriteFactory._canvas(fw * frames, fh);
+
+    for (let i = 0; i < frames; i++) {
+      const ox = i * fw;
+      const cx = ox + fw / 2;
+      const bob = i === 0 ? 0 : -2;
+
+      // Outer void halo — dark purple with starfield interior
+      const halo = ctx.createRadialGradient(cx, 30 + bob, 4, cx, 30 + bob, 30);
+      halo.addColorStop(0, 'rgba(80, 40, 160, 0.55)');
+      halo.addColorStop(0.5, 'rgba(40, 10, 80, 0.35)');
+      halo.addColorStop(1, 'rgba(8, 0, 24, 0)');
+      ctx.fillStyle = halo;
+      ctx.fillRect(ox, 0, fw, fh);
+
+      // Tattered hem at the bottom — phantom drift
+      ctx.fillStyle = 'rgba(16, 4, 40, 0.7)';
+      for (let s = 0; s < 6; s++) {
+        const tx = cx - 18 + s * 7 + (i ? 1 : 0);
+        SpriteFactory._triangle(ctx, tx, 48, tx + 4, 56, tx + 7, 48);
+      }
+
+      // Cloak — deep purple-black with subtle gradient
+      const cloakG = ctx.createLinearGradient(0, 12 + bob, 0, 50);
+      cloakG.addColorStop(0, '#2a1060');
+      cloakG.addColorStop(0.5, '#180840');
+      cloakG.addColorStop(1, '#08001a');
+      ctx.fillStyle = cloakG;
+      ctx.beginPath();
+      ctx.moveTo(cx - 12, 12 + bob);
+      ctx.lineTo(cx + 12, 12 + bob);
+      ctx.lineTo(cx + 20, 50);
+      ctx.lineTo(cx - 20, 50);
+      ctx.closePath();
+      ctx.fill();
+
+      // Embroidered void runes along the cloak
+      ctx.fillStyle = 'rgba(160, 120, 255, 0.55)';
+      for (let s = 0; s < 4; s++) {
+        const ry = 22 + s * 6 + bob;
+        ctx.fillRect(cx - 7, ry, 2, 2);
+        ctx.fillRect(cx + 5, ry, 2, 2);
+      }
+
+      // Inner starfield — flecks of light inside the cloak
+      ctx.fillStyle = '#ffffff';
+      for (let s = 0; s < 7; s++) {
+        const a = (s / 7) * Math.PI * 2 + (i ? 0.3 : 0);
+        const r = 6 + (s % 3);
+        ctx.fillRect(cx + Math.cos(a) * r,
+                     32 + bob + Math.sin(a) * 5, 1, 1);
+      }
+
+      // Deep hood — covers the face entirely
+      ctx.fillStyle = '#08001a';
+      ctx.beginPath();
+      ctx.moveTo(cx - 11, 16 + bob);
+      ctx.quadraticCurveTo(cx, 4 + bob, cx + 11, 16 + bob);
+      ctx.lineTo(cx + 10, 24 + bob);
+      ctx.lineTo(cx - 10, 24 + bob);
+      ctx.closePath();
+      ctx.fill();
+      // Hood rim highlight
+      ctx.strokeStyle = 'rgba(120, 80, 200, 0.55)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(cx - 11, 16 + bob);
+      ctx.quadraticCurveTo(cx, 4 + bob, cx + 11, 16 + bob);
+      ctx.stroke();
+
+      // Inside the hood — two void-eyes (pale violet, frame-flicker)
+      const eyeAlpha = i === 0 ? 0.95 : 0.7;
+      ctx.fillStyle = `rgba(200, 160, 255, ${eyeAlpha})`;
+      ctx.fillRect(cx - 4, 18 + bob, 2, 2);
+      ctx.fillRect(cx + 2, 18 + bob, 2, 2);
+      // Eye glow halo
+      const eyeG = ctx.createRadialGradient(cx, 19 + bob, 0, cx, 19 + bob, 6);
+      eyeG.addColorStop(0, `rgba(160, 120, 255, ${eyeAlpha * 0.5})`);
+      eyeG.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = eyeG;
+      ctx.fillRect(cx - 8, 14 + bob, 16, 10);
+
+      // Outstretched void-hand sleeves (silhouettes)
+      ctx.fillStyle = '#100828';
+      SpriteFactory._triangle(ctx, cx - 20, 24 + bob, cx - 12, 22 + bob, cx - 14, 32 + bob);
+      SpriteFactory._triangle(ctx, cx + 12, 22 + bob, cx + 20, 24 + bob, cx + 14, 32 + bob);
+
+      // Chest sigil — a ringed void mark
+      ctx.strokeStyle = 'rgba(180, 140, 255, 0.85)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(cx, 32 + bob, 4, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = '#1a0840';
+      SpriteFactory._circle(ctx, cx, 32 + bob, 2);
+
+      if (i === 1) {
+        // Frame 2 — slightly more faded (the veil drifting)
+        ctx.fillStyle = 'rgba(20, 0, 40, 0.18)';
+        ctx.fillRect(ox, 0, fw, fh);
+      }
+    }
+
+    SpriteFactory._addSheet(scene, 'adonaios', canvas, fw, fh);
+  }
+
+  static _voidOrb(scene) {
+    const { canvas, ctx } = SpriteFactory._canvas(16, 16);
+    // Outer void halo
+    const halo = ctx.createRadialGradient(8, 8, 1, 8, 8, 8);
+    halo.addColorStop(0, 'rgba(200, 160, 255, 0.9)');
+    halo.addColorStop(0.5, 'rgba(80, 40, 160, 0.5)');
+    halo.addColorStop(1, 'rgba(8, 0, 24, 0)');
+    ctx.fillStyle = halo;
+    ctx.fillRect(0, 0, 16, 16);
+    // Dark inner core (the void itself)
+    ctx.fillStyle = '#08001a';
+    SpriteFactory._circle(ctx, 8, 8, 4);
+    // Twin star-flecks inside
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(7, 6, 1, 1);
+    ctx.fillRect(9, 9, 1, 1);
+    // Violet rim
+    ctx.strokeStyle = '#a080ff';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(8, 8, 4.5, 0, Math.PI * 2);
+    ctx.stroke();
+    SpriteFactory._addImage(scene, 'void_orb', canvas);
   }
 
   // ── Sophia — the Light-Maiden, angelic gold form ──────────────────────────
